@@ -35,8 +35,22 @@ public final class TermuxActivity extends Activity {
         super.onCreate(bundle);
         setContentView(R.layout.drawer_layout);
 
-        termux = new Termux(this, null);
-        termux.install();
+        termux = Termux.mInstance.init(this, new Termux.TermuxHandle() {
+            @Override
+            public void success() {
+                Log.d("LLL", "success");
+            }
+
+            @Override
+            public void initFail() {
+                Log.d("LLL", "initFail");
+            }
+
+            @Override
+            public void installFail() {
+                Log.d("LLL", "installFail");
+            }
+        });
     }
 
     @Override
@@ -53,8 +67,8 @@ public final class TermuxActivity extends Activity {
     }
 
     public void btn2(View view) {
-        String cmd = "apt update&&apt -y install python&&pip install --upgrade pip&&pip install --upgrade youtube-dl\n";
-        Log.d("LLL", "000");
-        termux.getSession().write(cmd);
+        if (!termux.isInstalled()) {
+            termux.install();
+        }
     }
 }

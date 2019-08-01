@@ -2,6 +2,8 @@ package com.termux.app;
 
 import android.util.Log;
 
+import com.termux.Termux;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,9 +26,9 @@ public final class BackgroundJob {
 
     final Process mProcess;
 
-    public BackgroundJob(String cwd, String fileToExecute, final String[] args, final TermuxService service) {
+    public BackgroundJob(String cwd, String fileToExecute, final String[] args, final Termux service) {
         String[] env = buildEnvironment(false, cwd);
-        if (cwd == null) cwd = TermuxService.HOME_PATH;
+        if (cwd == null) cwd = Termux.HOME_PATH;
 
         final String[] progArray = setupProcessArgs(fileToExecute, args);
         final String processDescription = Arrays.toString(progArray);
@@ -62,7 +64,7 @@ public final class BackgroundJob {
 
                 try {
                     int exitCode = mProcess.waitFor();
-                    service.onBackgroundJobExited(BackgroundJob.this);
+//                    service.onBackgroundJobExited(BackgroundJob.this);
                     if (exitCode == 0) {
                         Log.i(LOG_TAG, "[" + pid + "] exited normally");
                     } else {
@@ -101,15 +103,15 @@ public final class BackgroundJob {
     }
 
     public static String[] buildEnvironment(boolean failSafe, String cwd) {
-        new File(TermuxService.HOME_PATH).mkdirs();
+        new File(Termux.HOME_PATH).mkdirs();
 
-        if (cwd == null) cwd = TermuxService.HOME_PATH;
+        if (cwd == null) cwd = Termux.HOME_PATH;
 
         List<String> environment = new ArrayList<>();
 
         environment.add("TERM=xterm-256color");
-        environment.add("HOME=" + TermuxService.HOME_PATH);
-        environment.add("PREFIX=" + TermuxService.PREFIX_PATH);
+        environment.add("HOME=" + Termux.HOME_PATH);
+        environment.add("PREFIX=" + Termux.PREFIX_PATH);
         environment.add("BOOTCLASSPATH" + System.getenv("BOOTCLASSPATH"));
         environment.add("ANDROID_ROOT=" + System.getenv("ANDROID_ROOT"));
         environment.add("ANDROID_DATA=" + System.getenv("ANDROID_DATA"));
@@ -124,19 +126,19 @@ public final class BackgroundJob {
             environment.add("PATH= " + System.getenv("PATH"));
         } else {
             if (shouldAddLdLibraryPath()) {
-                environment.add("LD_LIBRARY_PATH=" + TermuxService.PREFIX_PATH + "/lib");
+                environment.add("LD_LIBRARY_PATH=" + Termux.PREFIX_PATH + "/lib");
             }
             environment.add("LANG=en_US.UTF-8");
-            environment.add("PATH=" + TermuxService.PREFIX_PATH + "/bin:" + TermuxService.PREFIX_PATH + "/bin/applets");
+            environment.add("PATH=" + Termux.PREFIX_PATH + "/bin:" + Termux.PREFIX_PATH + "/bin/applets");
             environment.add("PWD=" + cwd);
-            environment.add("TMPDIR=" + TermuxService.PREFIX_PATH + "/tmp");
+            environment.add("TMPDIR=" + Termux.PREFIX_PATH + "/tmp");
         }
 
         return environment.toArray(new String[0]);
     }
 
     private static boolean shouldAddLdLibraryPath() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(TermuxService.PREFIX_PATH + "/etc/apt/sources.list")))) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Termux.PREFIX_PATH + "/etc/apt/sources.list")))) {
             String line;
             while ((line = in.readLine()) != null) {
                 if (!line.startsWith("#") && line.contains("https://dl.bintray.com/termux/termux-packages-24")) {
@@ -192,7 +194,7 @@ public final class BackgroundJob {
                                     if (executable.startsWith("/usr") || executable.startsWith("/bin")) {
                                         String[] parts = executable.split("/");
                                         String binary = parts[parts.length - 1];
-                                        interpreter = TermuxService.PREFIX_PATH + "/bin/" + binary;
+                                        interpreter = Termux.PREFIX_PATH + "/bin/" + binary;
                                     }
                                     break;
                                 }
@@ -202,7 +204,7 @@ public final class BackgroundJob {
                         }
                     } else {
                         // No shebang and no ELF, use standard shell.
-                        interpreter = TermuxService.PREFIX_PATH + "/bin/sh";
+                        interpreter = Termux.PREFIX_PATH + "/bin/sh";
                     }
                 }
             }

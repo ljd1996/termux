@@ -69,11 +69,9 @@ public final class TerminalSession extends TerminalOutput {
      */
     private int mTerminalFileDescriptor;
 
-    private Termux mTermux;
+    private long mInstallStartTime;
+    private volatile String mResultStr;
 
-    public void setTermux(Termux termux) {
-        this.mTermux = termux;
-    }
 
     @SuppressLint("HandlerLeak")
     private final Handler mMainThreadHandler = new Handler() {
@@ -90,29 +88,29 @@ public final class TerminalSession extends TerminalOutput {
                     for (int i = 0; i < bytesRead; i++) {
                         buffer[i] = mReceiveBuffer[i];
                     }
-                    String result = new String(buffer);
-                    Log.d("LLL", "buffer = " + result);
+                    mResultStr = new String(buffer);
+                    Log.d("LLL", "buffer = " + mResultStr);
 
-                    if (result.contains(Termux.INSTALL_SUCCESS) || result.contains(Termux.HAS_INSTALL)) {
-                        mTermux.setIsInstalled(true);
+                    // 开始安装youtube-dl
+                    // 180s内未安装成功则判断为安装失败
+                    if (mResultStr.trim().equals(Termux.CMD_GET_YOUTUBE_DL.trim())) {
+                        mInstallStartTime = System.currentTimeMillis();
+                        new Thread(() -> {
+                            while (!mResultStr.trim().contains(Termux.INSTALL_SUCCESS) && !mResultStr.trim().contains(Termux.HAS_INSTALL)) {
+                                if (System.currentTimeMillis() - mInstallStartTime >= 180000) {
+                                    Termux.mInstance.setInstalled(false);
+                                    Termux.mInstance.getTermuxHandle().installFail();
+                                    return;
+                                }
+                            }
+                            Termux.mInstance.setInstalled(true);
+                            Termux.mInstance.getTermuxHandle().success();
+                        }).start();
                     }
-
                 }
             } else if (msg.what == MSG_PROCESS_EXITED) {
                 int exitCode = (Integer) msg.obj;
                 cleanupResources(exitCode);
-
-                String exitDescription = "\r\n[Process completed";
-                if (exitCode > 0) {
-                    // Non-zero process exit.
-                    exitDescription += " (code " + exitCode + ")";
-                } else if (exitCode < 0) {
-                    // Negated signal.
-                    exitDescription += " (signal " + (-exitCode) + ")";
-                }
-                exitDescription += " - press Enter]";
-
-                byte[] bytesToWrite = exitDescription.getBytes(StandardCharsets.UTF_8);
             }
         }
     };

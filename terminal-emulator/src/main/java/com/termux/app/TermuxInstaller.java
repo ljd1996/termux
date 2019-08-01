@@ -52,35 +52,28 @@ public final class TermuxInstaller {
     /**
      * Performs setup if necessary.
      */
-    public static void setupIfNeeded(final Activity activity, Termux.TermuxInitHandle handle, final Runnable whenDone) {
+    public static void setupIfNeeded(final Activity activity, final Runnable whenDone) {
         // Termux can only be run as the primary user (device owner) since only that
         // account has the expected file system paths. Verify that:
         UserManager um = (UserManager) activity.getSystemService(Context.USER_SERVICE);
         boolean isPrimaryUser = um.getSerialNumberForUser(android.os.Process.myUserHandle()) == 0;
         if (!isPrimaryUser) {
-//            new AlertDialog.Builder(activity)
-//                    .setTitle(R.string.bootstrap_error_title)
-//                    .setMessage(R.string.bootstrap_error_not_primary_user_message)
-//                    .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> handle.initFail())
-//                    .show();
-            handle.initFail();
+            Termux.mInstance.setInstalled(false);
+            Termux.mInstance.getTermuxHandle().initFail();
             return;
         }
 
-        final File PREFIX_FILE = new File(TermuxService.PREFIX_PATH);
+        final File PREFIX_FILE = new File(Termux.PREFIX_PATH);
         if (PREFIX_FILE.isDirectory()) {
             whenDone.run();
             return;
         }
 
-//        final ProgressDialog progress = ProgressDialog.show(activity, null,
-//                activity.getString(R.string.bootstrap_installer_body),
-//                true, false);
         new Thread() {
             @Override
             public void run() {
                 try {
-                    final String STAGING_PREFIX_PATH = TermuxService.FILES_PATH + "/usr-staging";
+                    final String STAGING_PREFIX_PATH = Termux.FILES_PATH + "/usr-staging";
                     final File STAGING_PREFIX_FILE = new File(STAGING_PREFIX_PATH);
 
                     if (STAGING_PREFIX_FILE.exists()) {
@@ -138,35 +131,12 @@ public final class TermuxInstaller {
                     if (!STAGING_PREFIX_FILE.renameTo(PREFIX_FILE)) {
                         throw new RuntimeException("Unable to rename staging folder");
                     }
-
                     activity.runOnUiThread(whenDone);
                 } catch (final Exception e) {
                     Log.e(EmulatorDebug.LOG_TAG, "Bootstrap error", e);
-                    activity.runOnUiThread(() -> {
-                        try {
-                            new AlertDialog.Builder(activity).setTitle(R.string.bootstrap_error_title).setMessage(R.string.bootstrap_error_body)
-                                    .setNegativeButton(R.string.bootstrap_error_abort, (dialog, which) -> {
-                                        dialog.dismiss();
-//                                        activity.finish();
-                                        handle.initFail();
-                                    }).setPositiveButton(R.string.bootstrap_error_try_again, (dialog, which) -> {
-                                dialog.dismiss();
-                                TermuxInstaller.setupIfNeeded(activity, handle, whenDone);
-                            }).show();
-                        } catch (WindowManager.BadTokenException e1) {
-                            // Activity already dismissed - ignore.
-                        }
-                    });
+                    Termux.mInstance.setInstalled(false);
+                    Termux.mInstance.getTermuxHandle().initFail();
                 }
-//                finally {
-//                    activity.runOnUiThread(() -> {
-//                        try {
-////                            progress.dismiss();
-//                        } catch (RuntimeException e) {
-//                            // Activity already dismissed - ignore.
-//                        }
-//                    });
-//                }
             }
         }.start();
     }
@@ -236,7 +206,7 @@ public final class TermuxInstaller {
         new Thread() {
             public void run() {
                 try {
-                    File storageDir = new File(TermuxService.HOME_PATH, "storage");
+                    File storageDir = new File(Termux.HOME_PATH, "storage");
 
                     if (storageDir.exists()) {
                         try {

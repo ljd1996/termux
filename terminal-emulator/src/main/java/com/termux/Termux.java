@@ -1,101 +1,131 @@
 package com.termux;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.UiThread;
 
+import com.termux.app.BackgroundJob;
 import com.termux.app.TermuxInstaller;
-import com.termux.app.TermuxService;
 import com.termux.terminal.TerminalSession;
+
+import java.io.File;
+
 
 /**
  * @author liujiadong
  * @since 2019/8/1
  */
-public class Termux {
+public enum Termux {
+    mInstance;
 
-    private static final String CMD_GET_YOUTUBE_DL = "apt update&&apt -y install python&&pip install --upgrade pip&&pip install --upgrade youtube-dl\n";
+    @SuppressLint("SdCardPath")
+    public static final String FILES_PATH = "/data/data/com.termux/files";
+    public static final String PREFIX_PATH = FILES_PATH + "/usr";
+    public static final String HOME_PATH = FILES_PATH + "/home";
 
+    public static final String CMD_GET_YOUTUBE_DL = "apt update&&apt -y install python&&pip install --upgrade pip&&pip install --upgrade youtube-dl\n";
+    public static final String CMD_IS_INSTALLED = "youtube-dl\n";
     public static final String INSTALL_SUCCESS = "Successfully installed youtube-dl";
-    public static final String HAS_INSTALL = "Usage";
+    public static final String HAS_INSTALL = "Requirement already up-to-date: youtube-dl";
+
 
     private Activity mActivity;
-    private TermuxService mTermService;
-    private TerminalSession mSession;
-    private TermuxInitHandle mTermuxInitHandle;
+    private TermuxHandle mTermuxHandle;
 
+    private TerminalSession mSession;
     private boolean mIsInstalled = false;
 
-    public Termux(Activity activity, @NonNull TermuxInitHandle handle) {
+    public Termux init(Activity activity, TermuxHandle handle) {
         mActivity = activity;
-        mTermuxInitHandle = handle;
+        mTermuxHandle = handle;
+
+        TermuxInstaller.setupIfNeeded(mActivity, () -> {
+            try {
+                mSession = createSession();
+            } catch (Exception e) {
+                if (mTermuxHandle != null) {
+                    mTermuxHandle.initFail();
+                }
+            }
+        });
+        return this;
+    }
+
+    public void setInstalled(boolean mIsInstalled) {
+        this.mIsInstalled = mIsInstalled;
+    }
+
+    public boolean isInstalled() {
+        return mIsInstalled;
     }
 
     public TerminalSession getSession() {
         return mSession;
     }
 
-    public void setIsInstalled(boolean mIsInstalled) {
-        this.mIsInstalled = mIsInstalled;
+    public TermuxHandle getTermuxHandle() {
+        return mTermuxHandle;
     }
 
-    @UiThread
     public void install() {
-        bindService();
-    }
-
-    public boolean isInstalled() {
-        if (mTermService == null) {
-            bindService();
-        }
-        return true;
-    }
-
-    private void bindService() {
-        Intent serviceIntent = new Intent(mActivity, TermuxService.class);
-        mActivity.startService(serviceIntent);
-        if (!mActivity.bindService(serviceIntent, new TermuxConnection(), 0)) {
-            throw new RuntimeException("bindService() failed");
-        }
-    }
-
-    class TermuxConnection implements ServiceConnection {
-
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            mTermService = ((TermuxService.LocalBinder) iBinder).service;
-
-            if (mSession == null) {
-                TermuxInstaller.setupIfNeeded(mActivity, mTermuxInitHandle, () -> {
-                    try {
-                        mSession = mTermService.createTermSession(null, null, null, false);
-                        mSession.initializeEmulator(500, 50);
-                        mSession.setTermux(Termux.this);
-
-                        mSession.write(CMD_GET_YOUTUBE_DL);
-                    } catch (Exception e) {
-                        mTermuxInitHandle.initFail();
+        if (mSession == null) {
+            TermuxInstaller.setupIfNeeded(mActivity, () -> {
+                try {
+                    mSession = createSession();
+                } catch (Exception e) {
+                    if (mTermuxHandle != null) {
+                        mTermuxHandle.initFail();
                     }
-                });
+                }
+                mSession.write(CMD_GET_YOUTUBE_DL);
+            });
+        } else {
+            mSession.write(CMD_GET_YOUTUBE_DL);
+        }
+    }
+
+    private TerminalSession createSession() {
+        new File(HOME_PATH).mkdirs();
+
+        String[] env = BackgroundJob.buildEnvironment(false, HOME_PATH);
+        String executablePath = null;
+        for (String shellBinary : new String[]{"login", "bash", "zsh"}) {
+            File shellFile = new File(PREFIX_PATH + "/bin/" + shellBinary);
+            if (shellFile.canExecute()) {
+                executablePath = shellFile.getAbsolutePath();
+                break;
             }
         }
 
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            mTermService = null;
+        if (executablePath == null) {
+            // Fall back to system shell as last resort:
+            executablePath = "/system/bin/sh";
         }
+
+        String[] processArgs = BackgroundJob.setupProcessArgs(executablePath, null);
+        executablePath = processArgs[0];
+        int lastSlashIndex = executablePath.lastIndexOf('/');
+        String processName = "-" +
+                (lastSlashIndex == -1 ? executablePath : executablePath.substring(lastSlashIndex + 1));
+
+        String[] args = new String[processArgs.length];
+        args[0] = processName;
+        if (processArgs.length > 1)
+            System.arraycopy(processArgs, 1, args, 1, processArgs.length - 1);
+
+        TerminalSession session = new TerminalSession(executablePath, HOME_PATH, args, env);
+        session.initializeEmulator(500, 50);
+
+        return session;
     }
 
-    public interface TermuxInitHandle {
+
+    public interface TermuxHandle {
         void success();
 
         void initFail();
 
-        void youtubeInstallFail();
+        void installFail();
     }
 }
