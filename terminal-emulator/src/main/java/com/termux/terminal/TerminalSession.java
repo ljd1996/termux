@@ -72,6 +72,8 @@ public final class TerminalSession extends TerminalOutput {
     private long mInstallStartTime;
     private volatile String mResultStr;
 
+    private String mTmpResult;
+
 
     @SuppressLint("HandlerLeak")
     private final Handler mMainThreadHandler = new Handler() {
@@ -105,6 +107,16 @@ public final class TerminalSession extends TerminalOutput {
                             }
                             Termux.mInstance.setInstalled(true);
                             Termux.mInstance.getTermuxHandle().success();
+                        }).start();
+                    }
+                    if (mResultStr.trim().startsWith(Termux.PARSE_YOUTUBE)) {
+                        new Thread(() -> {
+                            while (mResultStr.trim().isEmpty()) ;
+                            while (!mResultStr.trim().isEmpty()) {
+                                Termux.mInstance.getTermuxHandle().parse(mResultStr);
+                                while (mResultStr.equals(mTmpResult)) ;
+                                mTmpResult = mResultStr;
+                            }
                         }).start();
                     }
                 }

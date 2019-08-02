@@ -26,6 +26,7 @@ public enum Termux {
 
     public static final String CMD_GET_YOUTUBE_DL = "apt update&&apt -y install python&&pip install --upgrade pip&&pip install --upgrade youtube-dl\n";
     public static final String CMD_IS_INSTALLED = "youtube-dl\n";
+    public static final String PARSE_YOUTUBE = "youtube-dl --skip-download --print-json ";
     public static final String INSTALL_SUCCESS = "Successfully installed youtube-dl";
     public static final String HAS_INSTALL = "Requirement already up-to-date: youtube-dl";
 
@@ -115,7 +116,7 @@ public enum Termux {
             System.arraycopy(processArgs, 1, args, 1, processArgs.length - 1);
 
         TerminalSession session = new TerminalSession(executablePath, HOME_PATH, args, env);
-        session.initializeEmulator(500, 50);
+        session.initializeEmulator(Integer.MAX_VALUE, 50);
 
         return session;
     }
@@ -123,9 +124,8 @@ public enum Termux {
 
     public interface TermuxHandle {
         void success();
-
         void initFail();
-
         void installFail();
+        void parse(String result);
     }
 }
