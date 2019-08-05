@@ -7,7 +7,7 @@ apply plugin: 'com.android.library'
 
 ext {
     bintrayName = 'terminal-emulator'
-    publishedGroupId = 'com.termux'
+    publishedGroupId = 'com.termux.core'
     libraryName = 'TerminalEmulator'
     artifact = 'terminal-emulator'
     libraryDescription = 'The terminal emulator used in Termux'

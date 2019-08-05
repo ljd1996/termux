@@ -2,13 +2,9 @@ package com.termux;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-
-import androidx.annotation.NonNull;
-
 import com.termux.app.BackgroundJob;
 import com.termux.app.TermuxInstaller;
 import com.termux.terminal.TerminalSession;
-
 import java.io.File;
 
 
@@ -50,6 +46,7 @@ public enum Termux {
                 }
             }
         });
+
         return this;
     }
 

@@ -1,7 +1,6 @@
 package com.termux.app;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -9,9 +8,7 @@ import android.os.UserManager;
 import android.system.Os;
 import android.util.Log;
 import android.util.Pair;
-import android.view.WindowManager;
 
-import com.termux.R;
 import com.termux.Termux;
 import com.termux.terminal.EmulatorDebug;
 

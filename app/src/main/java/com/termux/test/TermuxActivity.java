@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.termux.R;
 import com.termux.Termux;
 import com.termux.app.TermuxInstaller;
 
