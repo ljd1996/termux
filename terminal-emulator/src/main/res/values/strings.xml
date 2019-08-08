@@ -13,4 +13,7 @@
     <string name="file_received_title">Save file in ~/downloads/</string>
     <string name="file_received_edit_button">Edit</string>
     <string name="file_received_open_folder_button">Open folder</string>
+
+    <string name="cmd_parse_youtube">youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw</string>
+    <string name="cmd_parse_youtube_prefix">youtube-dl --skip-download --print-json </string>
 </resources>

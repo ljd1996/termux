@@ -116,7 +116,9 @@ public class TermuxActivity extends Activity {
     public void btn1(View view) {
         editText = findViewById(R.id.edit);
         String cmd = editText.getText().toString().trim();
-        termux.getSession().write(cmd + "\n");
+        if (termux.getSession() != null) {
+            termux.getSession().write(cmd + "\n");
+        }
     }
 
     public void btn2(View view) {
@@ -127,8 +129,7 @@ public class TermuxActivity extends Activity {
 
     public void btn3(View view) {
         editText = findViewById(R.id.edit);
-        String url = editText.getText().toString().trim();
-        termux.getSession().write(Termux.PARSE_YOUTUBE + url + "\n");
+        editText.setText(R.string.cmd_parse_youtube_prefix);
     }
 
     public void btn4(View view) {
