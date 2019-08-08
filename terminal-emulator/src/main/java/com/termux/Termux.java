@@ -16,11 +16,11 @@ public enum Termux {
     mInstance;
 
     @SuppressLint("SdCardPath")
-    public static final String FILES_PATH = "/data/data/com.termux/files";
+    public static final String FILES_PATH = "/data/data/com.vid007.videobuddy/files";
     public static final String PREFIX_PATH = FILES_PATH + "/usr";
     public static final String HOME_PATH = FILES_PATH + "/home";
 
-    public static final String CMD_GET_YOUTUBE_DL = "apt update&&apt -y install python&&pip install --upgrade pip&&pip install --upgrade youtube-dl\n";
+    public static final String CMD_GET_YOUTUBE_DL = "apt update&&apt -y install python2&&pip2 install --upgrade pip&&pip install --upgrade youtube-dl\n";
     public static final String CMD_IS_INSTALLED = "youtube-dl\n";
     public static final String PARSE_YOUTUBE = "youtube-dl --skip-download --print-json ";
     public static final String INSTALL_SUCCESS = "Successfully installed youtube-dl";

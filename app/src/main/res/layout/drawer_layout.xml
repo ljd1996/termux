@@ -28,6 +28,11 @@
             android:layout_height="wrap_content"
             android:text="parse youtube"
             android:onClick="btn3"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="clear"
+            android:onClick="btn4"/>
 
         <TextView
             android:id="@+id/text"

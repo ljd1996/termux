@@ -59,9 +59,9 @@ public class TermuxActivity extends Activity {
                     break;
                 case MSG_PARSE_RST:
                     String result = msg.obj.toString();
-                    if (result.startsWith(Termux.PARSE_YOUTUBE)) {
-                        textView.setText("");
-                    }
+//                    if (result.startsWith(Termux.PARSE_YOUTUBE)) {
+//                        textView.setText("");
+//                    }
                     textView.append(result);
                     break;
                 default:
@@ -129,5 +129,9 @@ public class TermuxActivity extends Activity {
         editText = findViewById(R.id.edit);
         String url = editText.getText().toString().trim();
         termux.getSession().write(Termux.PARSE_YOUTUBE + url + "\n");
+    }
+
+    public void btn4(View view) {
+        textView.setText("");
     }
 }

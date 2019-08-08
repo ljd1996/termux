@@ -72,7 +72,8 @@ public final class TerminalSession extends TerminalOutput {
     private long mInstallStartTime;
     private volatile String mResultStr;
 
-    private String mTmpResult;
+    private long mPrintStartTime;
+    private StringBuffer mPrintStr = new StringBuffer();
 
 
     @SuppressLint("HandlerLeak")
@@ -109,16 +110,20 @@ public final class TerminalSession extends TerminalOutput {
                             Termux.mInstance.getTermuxHandle().success();
                         }).start();
                     }
-                    if (mResultStr.trim().startsWith(Termux.PARSE_YOUTUBE)) {
-                        new Thread(() -> {
-                            while (mResultStr.trim().isEmpty()) ;
-                            while (!mResultStr.trim().isEmpty()) {
-                                Termux.mInstance.getTermuxHandle().parse(mResultStr);
-                                while (mResultStr.equals(mTmpResult)) ;
-                                mTmpResult = mResultStr;
-                            }
-                        }).start();
+
+                    if (!mResultStr.trim().isEmpty()) {
+                        mPrintStr.append(mResultStr);
                     }
+//                    if (mResultStr.trim().startsWith(Termux.PARSE_YOUTUBE)) {
+//                        new Thread(() -> {
+//                            while (mResultStr.trim().isEmpty()) ;
+//                            while (!mResultStr.trim().isEmpty()) {
+//                                Termux.mInstance.getTermuxHandle().parse(mResultStr);
+//                                while (mResultStr.equals(mTmpResult)) ;
+//                                mTmpResult = mResultStr;
+//                            }
+//                        }).start();
+//                    }
                 }
             } else if (msg.what == MSG_PROCESS_EXITED) {
                 int exitCode = (Integer) msg.obj;
@@ -137,6 +142,17 @@ public final class TerminalSession extends TerminalOutput {
         this.mCwd = cwd;
         this.mArgs = args;
         this.mEnv = env;
+
+        new Thread(() -> {
+            mPrintStartTime = System.currentTimeMillis();
+            while (true) {
+                if (System.currentTimeMillis() - mPrintStartTime >= 1500 && !mPrintStr.toString().trim().isEmpty()) {
+                    Termux.mInstance.getTermuxHandle().parse(mPrintStr.toString().trim());
+                    mPrintStr = new StringBuffer();
+                    mPrintStartTime = System.currentTimeMillis();
+                }
+            }
+        }).start();
     }
 
     /**
