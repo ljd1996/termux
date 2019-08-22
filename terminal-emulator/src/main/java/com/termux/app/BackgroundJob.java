@@ -141,7 +141,7 @@ public final class BackgroundJob {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Termux.PREFIX_PATH + "/etc/apt/sources.list")))) {
             String line;
             while ((line = in.readLine()) != null) {
-                if (!line.startsWith("#") && line.contains("http://192.168.56.47:80/hearing/test/")) {
+                if (!line.startsWith("#") && line.contains("http://test-m.videobuddy.vid007.com/apt/debs/hearing/test/")) {
                     return false;
                 }
             }

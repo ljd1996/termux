@@ -152,7 +152,7 @@ public final class TermuxInstaller {
 //        String url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
 //                ? "https://termux.org/bootstrap-" + archName + ".zip"
 //                : "https://termux.net/bootstrap/bootstrap-" + archName + ".zip";
-        String url = "http://192.168.56.47:80/hearing/bootstraps/bootstrap-" + archName + ".zip";
+        String url = "http://test-m.videobuddy.vid007.com/apt/debs/hearing/bootstraps/bootstrap-" + archName + ".zip";
         return new URL(url);
     }
 
