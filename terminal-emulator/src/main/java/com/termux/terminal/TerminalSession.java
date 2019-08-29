@@ -13,8 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
+import java.util.Arrays;
 
 
 public final class TerminalSession extends TerminalOutput {
@@ -40,8 +39,6 @@ public final class TerminalSession extends TerminalOutput {
 
     private static final int MSG_NEW_INPUT = 1;
     private static final int MSG_PROCESS_EXITED = 4;
-
-    public final String mHandle = UUID.randomUUID().toString();
 
     /**
      * A queue written to from a separate thread when the process outputs, and read by main thread to process by
@@ -69,11 +66,7 @@ public final class TerminalSession extends TerminalOutput {
      */
     private int mTerminalFileDescriptor;
 
-    private long mInstallStartTime;
     private volatile String mResultStr;
-
-    private long mPrintStartTime;
-    private StringBuffer mPrintStr = new StringBuffer();
 
 
     @SuppressLint("HandlerLeak")
@@ -94,43 +87,42 @@ public final class TerminalSession extends TerminalOutput {
                     mResultStr = new String(buffer);
                     Log.d("LLL", "buffer = " + mResultStr);
 
-                    // 开始安装youtube-dl
-                    // 180s内未安装成功则判断为安装失败
-                    if (mResultStr.trim().equals(Termux.CMD_GET_YOUTUBE_DL.trim())) {
-                        mInstallStartTime = System.currentTimeMillis();
-                        new Thread(() -> {
-                            while (!mResultStr.trim().contains(Termux.INSTALL_SUCCESS) && !mResultStr.trim().contains(Termux.HAS_INSTALL)) {
-                                if (System.currentTimeMillis() - mInstallStartTime >= 180000) {
-                                    Termux.mInstance.setInstalled(false);
-                                    Termux.mInstance.getTermuxHandle().installFail();
-                                    return;
-                                }
-                            }
-                            Termux.mInstance.setInstalled(true);
-                            Termux.mInstance.getTermuxHandle().success();
-                        }).start();
-                    }
-
-                    if (!mResultStr.trim().isEmpty()) {
-                        mPrintStr.append(mResultStr);
-                    }
-//                    if (mResultStr.trim().startsWith(Termux.PARSE_YOUTUBE)) {
-//                        new Thread(() -> {
-//                            while (mResultStr.trim().isEmpty()) ;
-//                            while (!mResultStr.trim().isEmpty()) {
-//                                Termux.mInstance.getTermuxHandle().parse(mResultStr);
-//                                while (mResultStr.equals(mTmpResult)) ;
-//                                mTmpResult = mResultStr;
-//                            }
-//                        }).start();
+//                    switch (Termux.sTaskType) {
+//                        case Termux.TASK_TYPE_INSTALL_YOUTUBE:
+//                            Termux.mInstance.getExecHandle().execute(Termux.SUCCESS_CODE.equals(handleMsg(mResultStr)), null);
+//                            Termux.sTaskType = Termux.TASK_TYPE_NO;
+//                            break;
+//                        case Termux.TASK_TYPE_CHECK_YOUTUBE_DL:
+//                            Termux.mInstance.getExecHandle().execute(Termux.SUCCESS_CODE.equals(handleMsg(mResultStr)), null);
+//                            Termux.sTaskType = Termux.TASK_TYPE_NO;
+//                        default:
+//                            break;
 //                    }
+                    if (Termux.sTaskType != Termux.TASK_TYPE_NO) {
+                        Termux.mInstance.getExecHandle().execute(Termux.SUCCESS_CODE.equals(handleMsg(mResultStr)), null);
+                        Termux.sTaskType = Termux.TASK_TYPE_NO;
+                    }
+                    if (mResultStr.trim().equals(Termux.CMD_INSTALL_YOUTUBE_DL.trim())) {
+                        Termux.sTaskType = Termux.TASK_TYPE_INSTALL_YOUTUBE;
+                    }
+                    if (mResultStr.trim().equals(Termux.CMD_CHECK_YOUTUBE_DL.trim())) {
+                        Termux.sTaskType = Termux.TASK_TYPE_CHECK_YOUTUBE_DL;
+                    }
+                    if (mResultStr.trim().startsWith(Termux.PARSE_YOUTUBE.trim())) {
+                        Termux.sTaskType = Termux.TASK_TYPE_PARSE_YOUTUBE;
+                    }
                 }
             } else if (msg.what == MSG_PROCESS_EXITED) {
                 int exitCode = (Integer) msg.obj;
                 cleanupResources(exitCode);
+                Log.d("LLL", "exitCode = " + exitCode);
             }
         }
     };
+
+    private String handleMsg(String msg) {
+        return msg.trim().replace("$", "").trim();
+    }
 
     private final String mShellPath;
     private final String mCwd;
@@ -142,17 +134,6 @@ public final class TerminalSession extends TerminalOutput {
         this.mCwd = cwd;
         this.mArgs = args;
         this.mEnv = env;
-
-        new Thread(() -> {
-            mPrintStartTime = System.currentTimeMillis();
-            while (true) {
-                if (System.currentTimeMillis() - mPrintStartTime >= 1500 && !mPrintStr.toString().trim().isEmpty()) {
-                    Termux.mInstance.getTermuxHandle().parse(mPrintStr.toString().trim());
-                    mPrintStr = new StringBuffer();
-                    mPrintStartTime = System.currentTimeMillis();
-                }
-            }
-        }).start();
     }
 
     /**
@@ -166,6 +147,13 @@ public final class TerminalSession extends TerminalOutput {
         int[] processId = new int[1];
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns);
         mShellPid = processId[0];
+
+        Log.d("LLL", "mShellPath: " + mShellPath);
+        Log.d("LLL", "mCwd: " + mCwd);
+        Log.d("LLL", "mArgs: " + Arrays.toString(mArgs));
+        Log.d("LLL", "mEnv: " + Arrays.toString(mEnv));
+        Log.d("LLL", "mShellPid: " + mShellPid);
+        Log.d("LLL", "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
 
         final FileDescriptor terminalFileDescriptorWrapped = wrapFileDescriptor(mTerminalFileDescriptor);
 
@@ -239,16 +227,4 @@ public final class TerminalSession extends TerminalOutput {
     public synchronized boolean isRunning() {
         return mShellPid != -1;
     }
-
-    /**
-     * Only valid if not {@link #isRunning()}.
-     */
-    public synchronized int getExitStatus() {
-        return mShellExitStatus;
-    }
-
-    public int getPid() {
-        return mShellPid;
-    }
-
 }

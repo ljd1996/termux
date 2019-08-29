@@ -1,22 +1,22 @@
 package com.termux.test;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
 
 import com.termux.R;
 import com.termux.Termux;
-import com.termux.app.TermuxInstaller;
+import com.termux.TermuxHandle;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 
 /**
@@ -31,44 +31,9 @@ import com.termux.app.TermuxInstaller;
  */
 public class TermuxActivity extends Activity {
 
-    private static final int MSG_SUCCESS = 0;
-    private static final int MSG_INIT_FAIL = 1;
-    private static final int MSG_INSTALL_FAIL = 2;
-    private static final int MSG_PARSE_RST = 3;
-
-    private static final int REQUESTCODE_PERMISSION_STORAGE = 1234;
-
     private EditText editText;
     private TextView textView;
 
-    private Termux termux;
-
-    @SuppressLint("HandlerLeak")
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            switch (msg.what) {
-                case MSG_SUCCESS:
-                    Toast.makeText(TermuxActivity.this, "install successfully!", Toast.LENGTH_LONG).show();
-                    break;
-                case MSG_INIT_FAIL:
-                    Toast.makeText(TermuxActivity.this, "initFail!", Toast.LENGTH_LONG).show();
-                    break;
-                case MSG_INSTALL_FAIL:
-                    Toast.makeText(TermuxActivity.this, "installFail!", Toast.LENGTH_LONG).show();
-                    break;
-                case MSG_PARSE_RST:
-                    String result = msg.obj.toString();
-//                    if (result.startsWith(Termux.PARSE_YOUTUBE)) {
-//                        textView.setText("");
-//                    }
-                    textView.append(result);
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -77,54 +42,87 @@ public class TermuxActivity extends Activity {
 
         textView = findViewById(R.id.text);
 
-        termux = Termux.mInstance.init(this, new Termux.TermuxHandle() {
+        Termux.mInstance.init(this, new TermuxHandle() {
             @Override
-            public void success() {
-                Log.d("LLL", "success");
-                handler.sendEmptyMessage(MSG_SUCCESS);
+            public void init(boolean isSuccess) {
+                Log.d("LLL", "init status: " + isSuccess);
             }
 
             @Override
-            public void initFail() {
-                Log.d("LLL", "initFail");
-                handler.sendEmptyMessage(MSG_INIT_FAIL);
-            }
+            public void execute(boolean isSuccess, String output) {
 
-            @Override
-            public void installFail() {
-                Log.d("LLL", "installFail");
-                handler.sendEmptyMessage(MSG_INSTALL_FAIL);
-            }
-
-            @Override
-            public void parse(String result) {
-                Message msg = Message.obtain();
-                msg.obj = result;
-                msg.what = MSG_PARSE_RST;
-                handler.sendMessage(msg);
             }
         });
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        if (requestCode == REQUESTCODE_PERMISSION_STORAGE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            TermuxInstaller.setupStorageSymlinks(this);
-        }
     }
 
     public void btn1(View view) {
         editText = findViewById(R.id.edit);
         String cmd = editText.getText().toString().trim();
-        if (termux.getSession() != null) {
-            termux.getSession().write(cmd + "\n");
+        if (Termux.mInstance.getSession() != null) {
+            if (cmd.startsWith("youtube-dl --skip-download --print-json")) {
+                Termux.mInstance.execute(Termux.PARSE_YOUTUBE + getExternalCacheDir() + File.separator + "result.json;"
+                                + "if [ $? -ne 0 ]; then echo -1; else echo 0;fi;\n",
+                        Termux.TASK_TYPE_PARSE_YOUTUBE, new TermuxHandle() {
+                            @Override
+                            public void init(boolean isSuccess) {
+
+                            }
+
+                            @Override
+                            public void execute(boolean isSuccess, String output) {
+                                if (isSuccess) {
+                                    e("LLL", readFile(getExternalCacheDir() + File.separator + "result.json"));
+                                }
+                            }
+                        });
+            } else {
+                Termux.mInstance.getSession().write(cmd + "\n");
+            }
+        }
+    }
+
+    public static void e(String tag, String msg) {
+        if (tag == null || tag.length() == 0 || msg == null || msg.length() == 0) return;
+        int segmentSize = 3 * 1024;
+        long length = msg.length();
+        if (length <= segmentSize) {
+            // 长度小于等于限制直接打印
+            Log.e(tag, msg);
+        } else {
+            while (msg.length() > segmentSize) {// 循环分段打印日志
+                String logContent = msg.substring(0, segmentSize);
+                msg = msg.replace(logContent, "");
+                Log.e(tag, logContent);
+            }
+            Log.e(tag, msg);// 打印剩余日志
         }
     }
 
     public void btn2(View view) {
-        if (!termux.isInstalled()) {
-            termux.install();
-        }
+        Termux.mInstance.execute(Termux.CMD_CHECK_YOUTUBE_DL, Termux.TASK_TYPE_CHECK_YOUTUBE_DL, new TermuxHandle() {
+            @Override
+            public void init(boolean isSuccess) {
+
+            }
+
+            @Override
+            public void execute(boolean isSuccess, String output) {
+                Log.d("LLL", "check youtube-dl status: " + isSuccess);
+                if (!isSuccess) {
+                    Termux.mInstance.execute(Termux.CMD_INSTALL_YOUTUBE_DL, Termux.TASK_TYPE_INSTALL_YOUTUBE, new TermuxHandle() {
+                        @Override
+                        public void init(boolean isSuccess) {
+
+                        }
+
+                        @Override
+                        public void execute(boolean isSuccess, String output) {
+                            Log.d("LLL", "install youtube-dl result: " + isSuccess);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     public void btn3(View view) {
@@ -135,4 +133,29 @@ public class TermuxActivity extends Activity {
     public void btn4(View view) {
         textView.setText("");
     }
+
+
+    private String readFile(String path) {
+        File file = new File(path);
+        FileInputStream is;
+        StringBuilder stringBuilder = null;
+        try {
+            if (file.length() != 0) {
+                is = new FileInputStream(file);
+                InputStreamReader streamReader = new InputStreamReader(is);
+                BufferedReader reader = new BufferedReader(streamReader);
+                String line;
+                stringBuilder = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                reader.close();
+                is.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return String.valueOf(stringBuilder);
+    }
+
 }

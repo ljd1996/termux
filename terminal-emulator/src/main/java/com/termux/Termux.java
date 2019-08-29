@@ -2,9 +2,14 @@ package com.termux;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import com.termux.app.BackgroundJob;
 import com.termux.app.TermuxInstaller;
 import com.termux.terminal.TerminalSession;
+
 import java.io.File;
 
 
@@ -20,66 +25,81 @@ public enum Termux {
     public static final String PREFIX_PATH = FILES_PATH + "/usr";
     public static final String HOME_PATH = FILES_PATH + "/home";
 
-    public static final String CMD_GET_YOUTUBE_DL = "apt update&&apt -y install python2&&pip2 install --upgrade pip&&pip install --upgrade youtube-dl\n";
-    public static final String CMD_IS_INSTALLED = "youtube-dl\n";
-    public static final String PARSE_YOUTUBE = "youtube-dl --skip-download --print-json ";
-    public static final String INSTALL_SUCCESS = "Successfully installed youtube-dl";
-    public static final String HAS_INSTALL = "Requirement already up-to-date: youtube-dl";
+    public static final String CMD_INSTALL_YOUTUBE_DL = "apt update> /dev/null 2>&1&&apt -y install python2> /dev/null 2>&1&&pip2 install --upgrade pip> /dev/null 2>&1&&pip install --upgrade youtube-dl > /dev/null 2>&1;if [ $? -ne 0 ]; then echo -1; else echo 0;fi;\n";
+    public static final String PARSE_YOUTUBE = "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw > ";
+    public static final String CMD_CHECK_YOUTUBE_DL = "youtube-dl --version>/dev/null 2>&1;if [ $? -ne 0 ]; then echo -1; else echo 0;fi;\n";
 
+    public static final String SUCCESS_CODE = "0";
+    public static final String FAIL_CODE = "-1";
+    public static final int TASK_TYPE_NO = 0;
+    public static final int TASK_TYPE_INSTALL_YOUTUBE = 1;
+    public static final int TASK_TYPE_PARSE_YOUTUBE = 2;
+    public static final int TASK_TYPE_CHECK_YOUTUBE_DL = 3;
+    public static int sTaskType = TASK_TYPE_NO;
 
     private Activity mActivity;
-    private TermuxHandle mTermuxHandle;
+    private TermuxHandle mInitHandle;
+    private TermuxHandle mExecHandle;
 
     private TerminalSession mSession;
-    private boolean mIsInstalled = false;
 
-    public Termux init(Activity activity, TermuxHandle handle) {
+    public void init(Activity activity, @NonNull TermuxHandle handle) {
         mActivity = activity;
-        mTermuxHandle = handle;
+        mInitHandle = handle;
 
         TermuxInstaller.setupIfNeeded(mActivity, () -> {
             try {
                 mSession = createSession();
             } catch (Exception e) {
-                if (mTermuxHandle != null) {
-                    mTermuxHandle.initFail();
+                if (mInitHandle != null) {
+                    mInitHandle.init(false);
                 }
             }
+            if (mInitHandle != null) {
+                mInitHandle.init(mSession != null);
+            }
         });
-
-        return this;
     }
 
-    public void setInstalled(boolean mIsInstalled) {
-        this.mIsInstalled = mIsInstalled;
-    }
-
-    public boolean isInstalled() {
-        return mIsInstalled;
-    }
 
     public TerminalSession getSession() {
         return mSession;
     }
 
-    public TermuxHandle getTermuxHandle() {
-        return mTermuxHandle;
+    public TermuxHandle getInitHandle() {
+        return mInitHandle;
     }
 
-    public void install() {
+    public TermuxHandle getExecHandle() {
+        return mExecHandle;
+    }
+
+    public void execute(String cmd, int taskType, TermuxHandle execHandle) {
+        if (execHandle == null) {
+            Log.e("LLL", "the execHandle cannot be null");
+            return;
+        }
+        this.mExecHandle = execHandle;
+        sTaskType = taskType;
         if (mSession == null) {
+            if (mActivity == null) {
+                mExecHandle.execute(false, null);
+                return;
+            }
+            this.mInitHandle = mExecHandle;
             TermuxInstaller.setupIfNeeded(mActivity, () -> {
                 try {
                     mSession = createSession();
                 } catch (Exception e) {
-                    if (mTermuxHandle != null) {
-                        mTermuxHandle.initFail();
-                    }
+                    mExecHandle.execute(false, null);
                 }
-                mSession.write(CMD_GET_YOUTUBE_DL);
+                mExecHandle.execute(mSession != null, null);
+                if (mSession != null) {
+                    mSession.write(cmd);
+                }
             });
         } else {
-            mSession.write(CMD_GET_YOUTUBE_DL);
+            mSession.write(cmd);
         }
     }
 
@@ -116,13 +136,5 @@ public enum Termux {
         session.initializeEmulator(Integer.MAX_VALUE, 50);
 
         return session;
-    }
-
-
-    public interface TermuxHandle {
-        void success();
-        void initFail();
-        void installFail();
-        void parse(String result);
     }
 }

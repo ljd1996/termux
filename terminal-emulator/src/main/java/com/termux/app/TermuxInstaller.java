@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.UserManager;
 import android.system.Os;
 import android.util.Log;
 import android.util.Pair;
 
 import com.termux.Termux;
+import com.termux.TermuxHandle;
 import com.termux.terminal.EmulatorDebug;
 
 import java.io.BufferedReader;
@@ -54,9 +57,11 @@ public final class TermuxInstaller {
         // account has the expected file system paths. Verify that:
         UserManager um = (UserManager) activity.getSystemService(Context.USER_SERVICE);
         boolean isPrimaryUser = um.getSerialNumberForUser(android.os.Process.myUserHandle()) == 0;
+        TermuxHandle initHandle = Termux.mInstance.getInitHandle();
         if (!isPrimaryUser) {
-            Termux.mInstance.setInstalled(false);
-            Termux.mInstance.getTermuxHandle().initFail();
+            if (initHandle != null) {
+                initHandle.init(false);
+            }
             return;
         }
 
@@ -65,6 +70,8 @@ public final class TermuxInstaller {
             whenDone.run();
             return;
         }
+
+        Handler handler = new Handler(Looper.getMainLooper());
 
         new Thread() {
             @Override
@@ -131,8 +138,9 @@ public final class TermuxInstaller {
                     activity.runOnUiThread(whenDone);
                 } catch (final Exception e) {
                     Log.e(EmulatorDebug.LOG_TAG, "Bootstrap error", e);
-                    Termux.mInstance.setInstalled(false);
-                    Termux.mInstance.getTermuxHandle().initFail();
+                    if (initHandle != null) {
+                        handler.post(() -> initHandle.init(false));
+                    }
                 }
             }
         }.start();
@@ -149,6 +157,7 @@ public final class TermuxInstaller {
      */
     private static URL determineZipUrl() throws MalformedURLException {
         String archName = determineTermuxArchName();
+        Log.d("LLL", "archName = " + archName);
 //        String url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
 //                ? "https://termux.org/bootstrap-" + archName + ".zip"
 //                : "https://termux.net/bootstrap/bootstrap-" + archName + ".zip";
