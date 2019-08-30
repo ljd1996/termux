@@ -10,12 +10,11 @@ import android.widget.TextView;
 import com.termux.R;
 import com.termux.Termux;
 import com.termux.TermuxHandle;
+import com.termux.terminal.EmulatorDebug;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 
@@ -42,42 +41,27 @@ public class TermuxActivity extends Activity {
 
         textView = findViewById(R.id.text);
 
-        Termux.mInstance.init(this, new TermuxHandle() {
-            @Override
-            public void init(boolean isSuccess) {
-                Log.d("LLL", "init status: " + isSuccess);
-            }
-
-            @Override
-            public void execute(boolean isSuccess, String output) {
-
-            }
-        });
+        Termux.mInstance.init(this);
     }
 
     public void btn1(View view) {
         editText = findViewById(R.id.edit);
         String cmd = editText.getText().toString().trim();
-        if (Termux.mInstance.getSession() != null) {
-            if (cmd.startsWith("youtube-dl --skip-download --print-json")) {
-                Termux.mInstance.execute(Termux.PARSE_YOUTUBE + getExternalCacheDir() + File.separator + "result.json;"
-                                + "if [ $? -ne 0 ]; then echo -1; else echo 0;fi;\n",
-                        Termux.TASK_TYPE_PARSE_YOUTUBE, new TermuxHandle() {
-                            @Override
-                            public void init(boolean isSuccess) {
+        if (cmd.startsWith("youtube-dl --skip-download --print-json")) {
+            Termux.mInstance.execute(Termux.CMD_PARSE_YOUTUBE + getExternalCacheDir() + File.separator + "result.json;"
+                    + "if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n", new TermuxHandle() {
+                @Override
+                public void init(boolean isSuccess) {
 
-                            }
+                }
 
-                            @Override
-                            public void execute(boolean isSuccess, String output) {
-                                if (isSuccess) {
-                                    e("LLL", readFile(getExternalCacheDir() + File.separator + "result.json"));
-                                }
-                            }
-                        });
-            } else {
-                Termux.mInstance.getSession().write(cmd + "\n");
-            }
+                @Override
+                public void execute(boolean isSuccess, String output) {
+                    if (isSuccess) {
+                        e(EmulatorDebug.LOG_TAG, readFile(getExternalCacheDir() + File.separator + "result.json"));
+                    }
+                }
+            });
         }
     }
 
@@ -99,7 +83,7 @@ public class TermuxActivity extends Activity {
     }
 
     public void btn2(View view) {
-        Termux.mInstance.execute(Termux.CMD_CHECK_YOUTUBE_DL, Termux.TASK_TYPE_CHECK_YOUTUBE_DL, new TermuxHandle() {
+        Termux.mInstance.execute(Termux.CMD_CHECK_YOUTUBE_DL, new TermuxHandle() {
             @Override
             public void init(boolean isSuccess) {
 
@@ -107,9 +91,9 @@ public class TermuxActivity extends Activity {
 
             @Override
             public void execute(boolean isSuccess, String output) {
-                Log.d("LLL", "check youtube-dl status: " + isSuccess);
+                Log.d(EmulatorDebug.LOG_TAG, "check youtube-dl status: " + isSuccess);
                 if (!isSuccess) {
-                    Termux.mInstance.execute(Termux.CMD_INSTALL_YOUTUBE_DL, Termux.TASK_TYPE_INSTALL_YOUTUBE, new TermuxHandle() {
+                    Termux.mInstance.execute(Termux.CMD_INSTALL_YOUTUBE_DL, new TermuxHandle() {
                         @Override
                         public void init(boolean isSuccess) {
 
@@ -117,7 +101,7 @@ public class TermuxActivity extends Activity {
 
                         @Override
                         public void execute(boolean isSuccess, String output) {
-                            Log.d("LLL", "install youtube-dl result: " + isSuccess);
+                            Log.d(EmulatorDebug.LOG_TAG, "install youtube-dl result: " + isSuccess);
                         }
                     });
                 }

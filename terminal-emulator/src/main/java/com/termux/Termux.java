@@ -2,12 +2,14 @@ package com.termux;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.termux.app.BackgroundJob;
 import com.termux.app.TermuxInstaller;
+import com.termux.terminal.EmulatorDebug;
 import com.termux.terminal.TerminalSession;
 
 import java.io.File;
@@ -25,12 +27,14 @@ public enum Termux {
     public static final String PREFIX_PATH = FILES_PATH + "/usr";
     public static final String HOME_PATH = FILES_PATH + "/home";
 
-    public static final String CMD_INSTALL_YOUTUBE_DL = "apt update> /dev/null 2>&1&&apt -y install python2> /dev/null 2>&1&&pip2 install --upgrade pip> /dev/null 2>&1&&pip install --upgrade youtube-dl > /dev/null 2>&1;if [ $? -ne 0 ]; then echo -1; else echo 0;fi;\n";
-    public static final String PARSE_YOUTUBE = "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw > ";
-    public static final String CMD_CHECK_YOUTUBE_DL = "youtube-dl --version>/dev/null 2>&1;if [ $? -ne 0 ]; then echo -1; else echo 0;fi;\n";
+    public static final String CMD_GET_RESULT = ";if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n";
+    public static final String CMD_INSTALL_YOUTUBE_DL = "apt update> /dev/null 2>&1&&apt -y install python2> /dev/null 2>&1&&pip2 install --upgrade pip> /dev/null 2>&1&&pip install --upgrade youtube-dl > /dev/null 2>&1;if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n";
+    public static final String CMD_PARSE_YOUTUBE = "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw > ";
+    public static final String CMD_CHECK_YOUTUBE_DL = "youtube-dl --version>/dev/null 2>&1;if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n";
 
     public static final String SUCCESS_CODE = "0";
-    public static final String FAIL_CODE = "-1";
+    public static final String FAIL_CODE = "1";
+
     public static final int TASK_TYPE_NO = 0;
     public static final int TASK_TYPE_INSTALL_YOUTUBE = 1;
     public static final int TASK_TYPE_PARSE_YOUTUBE = 2;
@@ -38,64 +42,41 @@ public enum Termux {
     public static int sTaskType = TASK_TYPE_NO;
 
     private Activity mActivity;
-    private TermuxHandle mInitHandle;
     private TermuxHandle mExecHandle;
-
     private TerminalSession mSession;
 
-    public void init(Activity activity, @NonNull TermuxHandle handle) {
+
+    public void init(Activity activity) {
         mActivity = activity;
-        mInitHandle = handle;
-
-        TermuxInstaller.setupIfNeeded(mActivity, () -> {
-            try {
-                mSession = createSession();
-            } catch (Exception e) {
-                if (mInitHandle != null) {
-                    mInitHandle.init(false);
-                }
-            }
-            if (mInitHandle != null) {
-                mInitHandle.init(mSession != null);
-            }
-        });
-    }
-
-
-    public TerminalSession getSession() {
-        return mSession;
-    }
-
-    public TermuxHandle getInitHandle() {
-        return mInitHandle;
     }
 
     public TermuxHandle getExecHandle() {
         return mExecHandle;
     }
 
-    public void execute(String cmd, int taskType, TermuxHandle execHandle) {
+    public void execute(String cmd, TermuxHandle execHandle) {
         if (execHandle == null) {
-            Log.e("LLL", "the execHandle cannot be null");
+            Log.e(EmulatorDebug.LOG_TAG, "the execHandle cannot be null");
             return;
         }
         this.mExecHandle = execHandle;
-        sTaskType = taskType;
         if (mSession == null) {
             if (mActivity == null) {
-                mExecHandle.execute(false, null);
+                mExecHandle.init(false);
                 return;
             }
-            this.mInitHandle = mExecHandle;
             TermuxInstaller.setupIfNeeded(mActivity, () -> {
                 try {
                     mSession = createSession();
                 } catch (Exception e) {
-                    mExecHandle.execute(false, null);
+                    mExecHandle.init(false);
                 }
-                mExecHandle.execute(mSession != null, null);
                 if (mSession != null) {
-                    mSession.write(cmd);
+                    if (!TextUtils.isEmpty(cmd)) {
+                        mSession.write(cmd);
+                    }
+                } else {
+                    mExecHandle.init(false);
                 }
             });
         } else {

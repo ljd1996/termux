@@ -57,7 +57,7 @@ public final class TermuxInstaller {
         // account has the expected file system paths. Verify that:
         UserManager um = (UserManager) activity.getSystemService(Context.USER_SERVICE);
         boolean isPrimaryUser = um.getSerialNumberForUser(android.os.Process.myUserHandle()) == 0;
-        TermuxHandle initHandle = Termux.mInstance.getInitHandle();
+        TermuxHandle initHandle = Termux.mInstance.getExecHandle();
         if (!isPrimaryUser) {
             if (initHandle != null) {
                 initHandle.init(false);
@@ -157,7 +157,7 @@ public final class TermuxInstaller {
      */
     private static URL determineZipUrl() throws MalformedURLException {
         String archName = determineTermuxArchName();
-        Log.d("LLL", "archName = " + archName);
+        Log.d(EmulatorDebug.LOG_TAG, "archName = " + archName);
 //        String url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
 //                ? "https://termux.org/bootstrap-" + archName + ".zip"
 //                : "https://termux.net/bootstrap/bootstrap-" + archName + ".zip";

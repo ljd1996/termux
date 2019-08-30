@@ -85,7 +85,7 @@ public final class TerminalSession extends TerminalOutput {
                         buffer[i] = mReceiveBuffer[i];
                     }
                     mResultStr = new String(buffer);
-                    Log.d("LLL", "buffer = " + mResultStr);
+                    Log.d(EmulatorDebug.LOG_TAG, "buffer = " + mResultStr);
 
 //                    switch (Termux.sTaskType) {
 //                        case Termux.TASK_TYPE_INSTALL_YOUTUBE:
@@ -99,6 +99,9 @@ public final class TerminalSession extends TerminalOutput {
 //                            break;
 //                    }
                     if (Termux.sTaskType != Termux.TASK_TYPE_NO) {
+                        if (mResultStr.trim().contains("Welcome to Termux")) {
+                            return;
+                        }
                         Termux.mInstance.getExecHandle().execute(Termux.SUCCESS_CODE.equals(handleMsg(mResultStr)), null);
                         Termux.sTaskType = Termux.TASK_TYPE_NO;
                     }
@@ -108,20 +111,20 @@ public final class TerminalSession extends TerminalOutput {
                     if (mResultStr.trim().equals(Termux.CMD_CHECK_YOUTUBE_DL.trim())) {
                         Termux.sTaskType = Termux.TASK_TYPE_CHECK_YOUTUBE_DL;
                     }
-                    if (mResultStr.trim().startsWith(Termux.PARSE_YOUTUBE.trim())) {
+                    if (mResultStr.trim().startsWith(Termux.CMD_PARSE_YOUTUBE.trim())) {
                         Termux.sTaskType = Termux.TASK_TYPE_PARSE_YOUTUBE;
                     }
                 }
             } else if (msg.what == MSG_PROCESS_EXITED) {
                 int exitCode = (Integer) msg.obj;
                 cleanupResources(exitCode);
-                Log.d("LLL", "exitCode = " + exitCode);
+                Log.d(EmulatorDebug.LOG_TAG, "exitCode = " + exitCode);
             }
         }
     };
 
     private String handleMsg(String msg) {
-        return msg.trim().replace("$", "").trim();
+        return String.valueOf(msg.trim().charAt(0));
     }
 
     private final String mShellPath;
@@ -148,12 +151,12 @@ public final class TerminalSession extends TerminalOutput {
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns);
         mShellPid = processId[0];
 
-        Log.d("LLL", "mShellPath: " + mShellPath);
-        Log.d("LLL", "mCwd: " + mCwd);
-        Log.d("LLL", "mArgs: " + Arrays.toString(mArgs));
-        Log.d("LLL", "mEnv: " + Arrays.toString(mEnv));
-        Log.d("LLL", "mShellPid: " + mShellPid);
-        Log.d("LLL", "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
+        Log.d(EmulatorDebug.LOG_TAG, "mShellPath: " + mShellPath);
+        Log.d(EmulatorDebug.LOG_TAG, "mCwd: " + mCwd);
+        Log.d(EmulatorDebug.LOG_TAG, "mArgs: " + Arrays.toString(mArgs));
+        Log.d(EmulatorDebug.LOG_TAG, "mEnv: " + Arrays.toString(mEnv));
+        Log.d(EmulatorDebug.LOG_TAG, "mShellPid: " + mShellPid);
+        Log.d(EmulatorDebug.LOG_TAG, "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
 
         final FileDescriptor terminalFileDescriptorWrapped = wrapFileDescriptor(mTerminalFileDescriptor);
 
