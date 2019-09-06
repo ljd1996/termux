@@ -70,6 +70,12 @@ public class Termux {
         }
     }
 
+    public void closeSession() {
+        if (mSession!=null) {
+            mSession.finishIfRunning();
+        }
+    }
+
     private TerminalSession createSession(TermuxListener listener) {
         new File(HOME_PATH).mkdirs();
 

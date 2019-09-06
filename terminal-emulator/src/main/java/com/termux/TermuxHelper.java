@@ -57,12 +57,13 @@ public class TermuxHelper {
                 ">" + context.getExternalCacheDir() + File.separator + "result.json", new TermuxListener() {
             @Override
             public void init(boolean isSuccess) {
-
+                Termux.getInstance().closeSession();
             }
 
             @Override
             public void execute(String cmd, boolean isSuccess) {
                 Log.d(TermuxDebug.LOG_TAG, cmd + ": " + isSuccess);
+                Termux.getInstance().closeSession();
             }
         });
     }

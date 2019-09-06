@@ -1,5 +1,8 @@
 package com.termux.terminal;
 
+import android.system.ErrnoException;
+import android.system.Os;
+import android.system.OsConstants;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -152,6 +155,21 @@ public final class TerminalSession {
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         if (mShellPid > 0) mTerminalToProcessIOQueue.write(bytes, 0, bytes.length);
     }
+
+    public void finishIfRunning() {
+        if (isRunning()) {
+            try {
+                Os.kill(mShellPid, OsConstants.SIGKILL);
+            } catch (ErrnoException e) {
+                Log.w("termux", "Failed sending SIGKILL: " + e.getMessage());
+            }
+        }
+    }
+
+    public synchronized boolean isRunning() {
+        return mShellPid != -1;
+    }
+
 
     private void cleanupResources() {
         synchronized (this) {
