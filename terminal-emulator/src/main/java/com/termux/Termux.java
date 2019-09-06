@@ -1,90 +1,76 @@
 package com.termux;
 
+
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.termux.app.BackgroundJob;
 import com.termux.app.TermuxInstaller;
-import com.termux.terminal.EmulatorDebug;
 import com.termux.terminal.TerminalSession;
+import com.termux.terminal.TermuxDebug;
 
 import java.io.File;
 
-
 /**
  * @author liujiadong
- * @since 2019/8/1
+ * @since 2019/9/6
  */
-public enum Termux {
-    mInstance;
+public class Termux {
 
     @SuppressLint("SdCardPath")
     public static final String FILES_PATH = "/data/data/com.vid007.videobuddy/files";
     public static final String PREFIX_PATH = FILES_PATH + "/usr";
     public static final String HOME_PATH = FILES_PATH + "/home";
 
-    public static final String CMD_GET_RESULT = ";if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n";
-    public static final String CMD_INSTALL_YOUTUBE_DL = "apt update> /dev/null 2>&1&&apt -y install python2> /dev/null 2>&1&&pip2 install --upgrade pip> /dev/null 2>&1&&pip install --upgrade youtube-dl > /dev/null 2>&1;if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n";
-    public static final String CMD_PARSE_YOUTUBE = "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw > ";
-    public static final String CMD_CHECK_YOUTUBE_DL = "youtube-dl --version>/dev/null 2>&1;if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n";
-
-    public static final String SUCCESS_CODE = "0";
-    public static final String FAIL_CODE = "1";
-
-    public static final int TASK_TYPE_NO = 0;
-    public static final int TASK_TYPE_INSTALL_YOUTUBE = 1;
-    public static final int TASK_TYPE_PARSE_YOUTUBE = 2;
-    public static final int TASK_TYPE_CHECK_YOUTUBE_DL = 3;
-    public static int sTaskType = TASK_TYPE_NO;
-
-    private Activity mActivity;
-    private TermuxHandle mExecHandle;
     private TerminalSession mSession;
 
 
-    public void init(Activity activity) {
-        mActivity = activity;
+    private Termux() {
     }
 
-    public TermuxHandle getExecHandle() {
-        return mExecHandle;
+    private static class LazyHolder {
+        private static final Termux sInstance = new Termux();
     }
 
-    public void execute(String cmd, TermuxHandle execHandle) {
-        if (execHandle == null) {
-            Log.e(EmulatorDebug.LOG_TAG, "the execHandle cannot be null");
+    public static Termux getInstance() {
+        return LazyHolder.sInstance;
+    }
+
+    public void execute(Context context, String cmd, TermuxListener listener) {
+        if (listener == null) {
+            Log.e(TermuxDebug.LOG_TAG, "the listener cannot be null");
             return;
         }
-        this.mExecHandle = execHandle;
-        if (mSession == null) {
-            if (mActivity == null) {
-                mExecHandle.init(false);
-                return;
-            }
-            TermuxInstaller.setupIfNeeded(mActivity, () -> {
-                try {
-                    mSession = createSession();
-                } catch (Exception e) {
-                    mExecHandle.init(false);
+        synchronized (this) {
+            if (mSession == null) {
+                if (context == null) {
+                    listener.init(false);
+                    return;
                 }
-                if (mSession != null) {
-                    if (!TextUtils.isEmpty(cmd)) {
-                        mSession.write(cmd);
+                TermuxInstaller.setupIfNeeded(context, listener, () -> {
+                    try {
+                        mSession = createSession(listener);
+                    } catch (Exception e) {
+                        listener.init(false);
                     }
-                } else {
-                    mExecHandle.init(false);
-                }
-            });
-        } else {
-            mSession.write(cmd);
+                    if (mSession != null) {
+                        if (!TextUtils.isEmpty(cmd)) {
+                            mSession.write(cmd);
+                        }
+                    } else {
+                        listener.init(false);
+                    }
+                });
+            } else {
+                mSession.setmListener(listener);
+                mSession.write(cmd);
+            }
         }
     }
 
-    private TerminalSession createSession() {
+    private TerminalSession createSession(TermuxListener listener) {
         new File(HOME_PATH).mkdirs();
 
         String[] env = BackgroundJob.buildEnvironment(false, HOME_PATH);
@@ -113,8 +99,8 @@ public enum Termux {
         if (processArgs.length > 1)
             System.arraycopy(processArgs, 1, args, 1, processArgs.length - 1);
 
-        TerminalSession session = new TerminalSession(executablePath, HOME_PATH, args, env);
-        session.initializeEmulator(Integer.MAX_VALUE, 50);
+        TerminalSession session = new TerminalSession(executablePath, HOME_PATH, args, env, listener);
+        session.initializeEmulator(Integer.MAX_VALUE, 120);
 
         return session;
     }

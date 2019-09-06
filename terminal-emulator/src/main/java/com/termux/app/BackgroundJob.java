@@ -3,6 +3,7 @@ package com.termux.app;
 import android.util.Log;
 
 import com.termux.Termux;
+import com.termux.TermuxHelper;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A background job launched by Termux.
+ * A background job launched by TermuxHelper.
  */
 public final class BackgroundJob {
 
@@ -26,7 +27,7 @@ public final class BackgroundJob {
 
     final Process mProcess;
 
-    public BackgroundJob(String cwd, String fileToExecute, final String[] args, final Termux service) {
+    public BackgroundJob(String cwd, String fileToExecute, final String[] args, final TermuxHelper service) {
         String[] env = buildEnvironment(false, cwd);
         if (cwd == null) cwd = Termux.HOME_PATH;
 

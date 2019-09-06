@@ -8,9 +8,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.termux.R;
+import com.termux.TermuxHelper;
 import com.termux.Termux;
-import com.termux.TermuxHandle;
-import com.termux.terminal.EmulatorDebug;
+import com.termux.TermuxListener;
+import com.termux.terminal.TermuxDebug;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,29 +41,27 @@ public class TermuxActivity extends Activity {
         setContentView(R.layout.drawer_layout);
 
         textView = findViewById(R.id.text);
-
-        Termux.mInstance.init(this);
     }
 
     public void btn1(View view) {
         editText = findViewById(R.id.edit);
         String cmd = editText.getText().toString().trim();
-        if (cmd.startsWith("youtube-dl --skip-download --print-json")) {
-            Termux.mInstance.execute(Termux.CMD_PARSE_YOUTUBE + getExternalCacheDir() + File.separator + "result.json;"
-                    + "if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n", new TermuxHandle() {
-                @Override
-                public void init(boolean isSuccess) {
-
-                }
-
-                @Override
-                public void execute(boolean isSuccess, String output) {
-                    if (isSuccess) {
-                        e(EmulatorDebug.LOG_TAG, readFile(getExternalCacheDir() + File.separator + "result.json"));
-                    }
-                }
-            });
-        }
+//        if (cmd.startsWith("youtube-dl --skip-download --print-json")) {
+//            TermuxHelper.mInstance.execute(TermuxHelper.CMD_PARSE_YOUTUBE + getExternalCacheDir() + File.separator + "result.json;"
+//                    + "if [ $? -ne 0 ]; then echo 1; else echo 0;fi;\n", new TermuxListener() {
+//                @Override
+//                public void init(boolean isSuccess) {
+//
+//                }
+//
+//                @Override
+//                public void execute(boolean isSuccess, String cmd) {
+//                    if (isSuccess) {
+//                        e(TermuxDebug.LOG_TAG, readFile(getExternalCacheDir() + File.separator + "result.json"));
+//                    }
+//                }
+//            });
+//        }
     }
 
     public static void e(String tag, String msg) {
@@ -83,30 +82,8 @@ public class TermuxActivity extends Activity {
     }
 
     public void btn2(View view) {
-        Termux.mInstance.execute(Termux.CMD_CHECK_YOUTUBE_DL, new TermuxHandle() {
-            @Override
-            public void init(boolean isSuccess) {
-
-            }
-
-            @Override
-            public void execute(boolean isSuccess, String output) {
-                Log.d(EmulatorDebug.LOG_TAG, "check youtube-dl status: " + isSuccess);
-                if (!isSuccess) {
-                    Termux.mInstance.execute(Termux.CMD_INSTALL_YOUTUBE_DL, new TermuxHandle() {
-                        @Override
-                        public void init(boolean isSuccess) {
-
-                        }
-
-                        @Override
-                        public void execute(boolean isSuccess, String output) {
-                            Log.d(EmulatorDebug.LOG_TAG, "install youtube-dl result: " + isSuccess);
-                        }
-                    });
-                }
-            }
-        });
+        TermuxHelper helper = new TermuxHelper();
+        helper.parseYoutube(this, "https://www.youtube.com/watch?v=QnjtfMZZnOw");
     }
 
     public void btn3(View view) {

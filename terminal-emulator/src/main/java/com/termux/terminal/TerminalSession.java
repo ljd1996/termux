@@ -1,11 +1,9 @@
 package com.termux.terminal;
 
-import android.annotation.SuppressLint;
-import android.os.Handler;
-import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 
-import com.termux.Termux;
+import com.termux.TermuxListener;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
@@ -13,150 +11,54 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 
-public final class TerminalSession extends TerminalOutput {
+public final class TerminalSession {
 
-    private static FileDescriptor wrapFileDescriptor(int fileDescriptor) {
-        FileDescriptor result = new FileDescriptor();
-        try {
-            Field descriptorField;
-            try {
-                descriptorField = FileDescriptor.class.getDeclaredField("descriptor");
-            } catch (NoSuchFieldException e) {
-                // For desktop java:
-                descriptorField = FileDescriptor.class.getDeclaredField("fd");
-            }
-            descriptorField.setAccessible(true);
-            descriptorField.set(result, fileDescriptor);
-        } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
-            Log.wtf(EmulatorDebug.LOG_TAG, "Error accessing FileDescriptor#descriptor private field", e);
-            System.exit(1);
-        }
-        return result;
-    }
+    private static final String CMD_NO_OUTPUT = ">/dev/null 2>&1;";
+    private static final String SUCCESS_CODE = "0";
+    public static final String FAIL_CODE = "1";
 
-    private static final int MSG_NEW_INPUT = 1;
-    private static final int MSG_PROCESS_EXITED = 4;
-
-    /**
-     * A queue written to from a separate thread when the process outputs, and read by main thread to process by
-     * terminal emulator.
-     */
-    private final ByteQueue mProcessToTerminalIOQueue = new ByteQueue(4096);
-    /**
-     * A queue written to from the main thread due to user interaction, and read by another thread which forwards by
-     * writing to the {@link #mTerminalFileDescriptor}.
-     */
     private final ByteQueue mTerminalToProcessIOQueue = new ByteQueue(4096);
 
-    /**
-     * The pid of the shell process. 0 if not started and -1 if finished running.
-     */
     private int mShellPid;
 
-    /**
-     * The exit status of the shell process. Only valid if ${@link #mShellPid} is -1.
-     */
-    private int mShellExitStatus;
-
-    /**
-     * The file descriptor referencing the master half of a pseudo-terminal pair, resulting from calling
-     */
     private int mTerminalFileDescriptor;
-
-    private volatile String mResultStr;
-
-
-    @SuppressLint("HandlerLeak")
-    private final Handler mMainThreadHandler = new Handler() {
-        final byte[] mReceiveBuffer = new byte[4 * 1024];
-
-        @Override
-        public void handleMessage(Message msg) {
-            if (msg.what == MSG_NEW_INPUT && isRunning()) {
-                int bytesRead = mProcessToTerminalIOQueue.read(mReceiveBuffer, false);
-                if (bytesRead > 0) {
-
-                    // Terminal新添加的打印输出
-                    byte[] buffer = new byte[bytesRead];
-                    for (int i = 0; i < bytesRead; i++) {
-                        buffer[i] = mReceiveBuffer[i];
-                    }
-                    mResultStr = new String(buffer);
-                    Log.d(EmulatorDebug.LOG_TAG, "buffer = " + mResultStr);
-
-//                    switch (Termux.sTaskType) {
-//                        case Termux.TASK_TYPE_INSTALL_YOUTUBE:
-//                            Termux.mInstance.getExecHandle().execute(Termux.SUCCESS_CODE.equals(handleMsg(mResultStr)), null);
-//                            Termux.sTaskType = Termux.TASK_TYPE_NO;
-//                            break;
-//                        case Termux.TASK_TYPE_CHECK_YOUTUBE_DL:
-//                            Termux.mInstance.getExecHandle().execute(Termux.SUCCESS_CODE.equals(handleMsg(mResultStr)), null);
-//                            Termux.sTaskType = Termux.TASK_TYPE_NO;
-//                        default:
-//                            break;
-//                    }
-                    if (Termux.sTaskType != Termux.TASK_TYPE_NO) {
-                        if (mResultStr.trim().contains("Welcome to Termux")) {
-                            return;
-                        }
-                        Termux.mInstance.getExecHandle().execute(Termux.SUCCESS_CODE.equals(handleMsg(mResultStr)), null);
-                        Termux.sTaskType = Termux.TASK_TYPE_NO;
-                    }
-                    if (mResultStr.trim().equals(Termux.CMD_INSTALL_YOUTUBE_DL.trim())) {
-                        Termux.sTaskType = Termux.TASK_TYPE_INSTALL_YOUTUBE;
-                    }
-                    if (mResultStr.trim().equals(Termux.CMD_CHECK_YOUTUBE_DL.trim())) {
-                        Termux.sTaskType = Termux.TASK_TYPE_CHECK_YOUTUBE_DL;
-                    }
-                    if (mResultStr.trim().startsWith(Termux.CMD_PARSE_YOUTUBE.trim())) {
-                        Termux.sTaskType = Termux.TASK_TYPE_PARSE_YOUTUBE;
-                    }
-                }
-            } else if (msg.what == MSG_PROCESS_EXITED) {
-                int exitCode = (Integer) msg.obj;
-                cleanupResources(exitCode);
-                Log.d(EmulatorDebug.LOG_TAG, "exitCode = " + exitCode);
-            }
-        }
-    };
-
-    private String handleMsg(String msg) {
-        return String.valueOf(msg.trim().charAt(0));
-    }
 
     private final String mShellPath;
     private final String mCwd;
     private final String[] mArgs;
     private final String[] mEnv;
 
-    public TerminalSession(String shellPath, String cwd, String[] args, String[] env) {
+    private volatile String mCurrentCmd = "";
+    private TermuxListener mListener;
+
+    public TerminalSession(String shellPath, String cwd, String[] args, String[] env, TermuxListener listener) {
         this.mShellPath = shellPath;
         this.mCwd = cwd;
         this.mArgs = args;
         this.mEnv = env;
+        this.mListener = listener;
     }
 
-    /**
-     * Set the terminal emulator's window size and start terminal emulation.
-     *
-     * @param columns The number of columns in the terminal window.
-     * @param rows    The number of rows in the terminal window.
-     */
+    public void setmListener(TermuxListener listener) {
+        this.mListener = listener;
+    }
+
     public void initializeEmulator(int columns, int rows) {
 
         int[] processId = new int[1];
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns);
         mShellPid = processId[0];
 
-        Log.d(EmulatorDebug.LOG_TAG, "mShellPath: " + mShellPath);
-        Log.d(EmulatorDebug.LOG_TAG, "mCwd: " + mCwd);
-        Log.d(EmulatorDebug.LOG_TAG, "mArgs: " + Arrays.toString(mArgs));
-        Log.d(EmulatorDebug.LOG_TAG, "mEnv: " + Arrays.toString(mEnv));
-        Log.d(EmulatorDebug.LOG_TAG, "mShellPid: " + mShellPid);
-        Log.d(EmulatorDebug.LOG_TAG, "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
+        Log.d(TermuxDebug.LOG_TAG, "mShellPath: " + mShellPath);
+        Log.d(TermuxDebug.LOG_TAG, "mCwd: " + mCwd);
+        Log.d(TermuxDebug.LOG_TAG, "mArgs: " + Arrays.toString(mArgs));
+        Log.d(TermuxDebug.LOG_TAG, "mEnv: " + Arrays.toString(mEnv));
+        Log.d(TermuxDebug.LOG_TAG, "mShellPid: " + mShellPid);
+        Log.d(TermuxDebug.LOG_TAG, "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
 
         final FileDescriptor terminalFileDescriptorWrapped = wrapFileDescriptor(mTerminalFileDescriptor);
 
@@ -168,8 +70,14 @@ public final class TerminalSession extends TerminalOutput {
                     while (true) {
                         int read = termIn.read(buffer);
                         if (read == -1) return;
-                        if (!mProcessToTerminalIOQueue.write(buffer, 0, read)) return;
-                        mMainThreadHandler.sendEmptyMessage(MSG_NEW_INPUT);
+
+                        String result = new String(buffer, 0, read);
+
+                        Log.d(TermuxDebug.LOG_TAG, "result = " + result);
+
+                        if (!TextUtils.isEmpty(result) && result.trim().startsWith(mCurrentCmd) && mListener != null) {
+                            mListener.execute(mCurrentCmd, result.trim().replace(mCurrentCmd, "").trim().startsWith(SUCCESS_CODE));
+                        }
                     }
                 } catch (Exception e) {
                     // Ignore, just shutting down.
@@ -185,7 +93,12 @@ public final class TerminalSession extends TerminalOutput {
                     while (true) {
                         int bytesToWrite = mTerminalToProcessIOQueue.read(buffer, true);
                         if (bytesToWrite == -1) return;
-                        termOut.write(buffer, 0, bytesToWrite);
+
+                        mCurrentCmd = new String(buffer, 0, bytesToWrite);
+                        Log.d(TermuxDebug.LOG_TAG, "mCurrentCmd = " + mCurrentCmd);
+
+                        byte[] cmd = wrapCmd(buffer, bytesToWrite);
+                        termOut.write(cmd, 0, cmd.length);
                     }
                 } catch (IOException e) {
                     // Ignore.
@@ -197,37 +110,54 @@ public final class TerminalSession extends TerminalOutput {
             @Override
             public void run() {
                 int processExitCode = JNI.waitFor(mShellPid);
-                mMainThreadHandler.sendMessage(mMainThreadHandler.obtainMessage(MSG_PROCESS_EXITED, processExitCode));
+                cleanupResources();
+                Log.d(TermuxDebug.LOG_TAG, "exitCode = " + processExitCode);
             }
         }.start();
-
     }
 
-    /**
-     * Write data to the shell process.
-     */
-    @Override
-    public void write(byte[] data, int offset, int count) {
-        if (mShellPid > 0) mTerminalToProcessIOQueue.write(data, offset, count);
+
+    private String wrapCmd(String cmd) {
+        return "{ " + cmd + "; }" + CMD_NO_OUTPUT + wrapResult(cmd);
     }
 
-    /**
-     * Cleanup resources when the process exits.
-     */
-    private void cleanupResources(int exitStatus) {
+    private String wrapResult(String cmd) {
+        return "if [ $? -ne 0 ]; then echo \"" + cmd + " 1\"; else echo \"" + cmd + " 0\";fi;\n";
+    }
+
+    private byte[] wrapCmd(byte[] cmd, int bytesToWrite) {
+        return wrapCmd(new String(cmd, 0, bytesToWrite)).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static FileDescriptor wrapFileDescriptor(int fileDescriptor) {
+        FileDescriptor result = new FileDescriptor();
+        try {
+            Field descriptorField;
+            try {
+                descriptorField = FileDescriptor.class.getDeclaredField("descriptor");
+            } catch (NoSuchFieldException e) {
+                // For desktop java:
+                descriptorField = FileDescriptor.class.getDeclaredField("fd");
+            }
+            descriptorField.setAccessible(true);
+            descriptorField.set(result, fileDescriptor);
+        } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
+            Log.wtf(TermuxDebug.LOG_TAG, "Error accessing FileDescriptor#descriptor private field", e);
+            System.exit(1);
+        }
+        return result;
+    }
+
+    public void write(String s) {
+        byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
+        if (mShellPid > 0) mTerminalToProcessIOQueue.write(bytes, 0, bytes.length);
+    }
+
+    private void cleanupResources() {
         synchronized (this) {
             mShellPid = -1;
-            mShellExitStatus = exitStatus;
         }
-
-        // Stop the reader and writer threads, and close the I/O streams
         mTerminalToProcessIOQueue.close();
-        mProcessToTerminalIOQueue.close();
         JNI.close(mTerminalFileDescriptor);
-    }
-
-
-    public synchronized boolean isRunning() {
-        return mShellPid != -1;
     }
 }

@@ -5,9 +5,9 @@ package com.termux;
  * @author liujiadong
  * @since 2019/8/29
  */
-public interface TermuxHandle {
+public interface TermuxListener {
 
     void init(boolean isSuccess);
 
-    void execute(boolean isSuccess, String output);
+    void execute(String cmd, boolean isSuccess);
 }

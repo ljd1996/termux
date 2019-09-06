@@ -1,6 +1,5 @@
 package com.termux.app;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -12,8 +11,9 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.termux.Termux;
-import com.termux.TermuxHandle;
-import com.termux.terminal.EmulatorDebug;
+import com.termux.TermuxHelper;
+import com.termux.TermuxListener;
+import com.termux.terminal.TermuxDebug;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,7 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Install the Termux bootstrap packages if necessary by following the below steps:
+ * Install the TermuxHelper bootstrap packages if necessary by following the below steps:
  * <p/>
  * (1) If $PREFIX already exist, assume that it is correct and be done. Note that this relies on that we do not create a
  * broken $PREFIX folder below.
@@ -52,12 +52,11 @@ public final class TermuxInstaller {
     /**
      * Performs setup if necessary.
      */
-    public static void setupIfNeeded(final Activity activity, final Runnable whenDone) {
-        // Termux can only be run as the primary user (device owner) since only that
+    public static void setupIfNeeded(final Context context, TermuxListener initHandle, final Runnable whenDone) {
+        // TermuxHelper can only be run as the primary user (device owner) since only that
         // account has the expected file system paths. Verify that:
-        UserManager um = (UserManager) activity.getSystemService(Context.USER_SERVICE);
+        UserManager um = (UserManager) context.getSystemService(Context.USER_SERVICE);
         boolean isPrimaryUser = um.getSerialNumberForUser(android.os.Process.myUserHandle()) == 0;
-        TermuxHandle initHandle = Termux.mInstance.getExecHandle();
         if (!isPrimaryUser) {
             if (initHandle != null) {
                 initHandle.init(false);
@@ -135,9 +134,9 @@ public final class TermuxInstaller {
                     if (!STAGING_PREFIX_FILE.renameTo(PREFIX_FILE)) {
                         throw new RuntimeException("Unable to rename staging folder");
                     }
-                    activity.runOnUiThread(whenDone);
+                    handler.post(whenDone);
                 } catch (final Exception e) {
-                    Log.e(EmulatorDebug.LOG_TAG, "Bootstrap error", e);
+                    Log.e(TermuxDebug.LOG_TAG, "Bootstrap error", e);
                     if (initHandle != null) {
                         handler.post(() -> initHandle.init(false));
                     }
@@ -157,11 +156,12 @@ public final class TermuxInstaller {
      */
     private static URL determineZipUrl() throws MalformedURLException {
         String archName = determineTermuxArchName();
-        Log.d(EmulatorDebug.LOG_TAG, "archName = " + archName);
-//        String url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-//                ? "https://termux.org/bootstrap-" + archName + ".zip"
-//                : "https://termux.net/bootstrap/bootstrap-" + archName + ".zip";
-        String url = "http://test-m.videobuddy.vid007.com/apt/debs/hearing/bootstraps/bootstrap-" + archName + ".zip";
+        Log.d(TermuxDebug.LOG_TAG, "archName = " + archName);
+        Log.d(TermuxDebug.LOG_TAG, "sdk version = " + Build.VERSION.SDK_INT);
+        String url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                ? "http://test-m.videobuddy.vid007.com/apt/debs/hearing/bootstraps/bootstrap-" + archName + ".zip"
+                : "http://test-m.videobuddy.vid007.com/apt/debs/hearing/android-5/bootstrap-" + archName + ".zip";
+//        String url = "http://192.168.56.47:80/hearing/android-5/bootstrap-" + archName + ".zip";
         return new URL(url);
     }
 
