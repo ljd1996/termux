@@ -27,7 +27,7 @@ public final class BackgroundJob {
 
     final Process mProcess;
 
-    public BackgroundJob(String cwd, String fileToExecute, final String[] args, final TermuxHelper service) {
+    public BackgroundJob(String cwd, String fileToExecute, final String[] args) {
         String[] env = buildEnvironment(false, cwd);
         if (cwd == null) cwd = Termux.HOME_PATH;
 
@@ -142,7 +142,7 @@ public final class BackgroundJob {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Termux.PREFIX_PATH + "/etc/apt/sources.list")))) {
             String line;
             while ((line = in.readLine()) != null) {
-                if (!line.startsWith("#") && line.contains("http://test-m.videobuddy.vid007.com/apt/debs/hearing/test/")) {
+                if (!line.startsWith("#") && line.contains("http://192.168.56.47/hearing/")) {
                     return false;
                 }
             }

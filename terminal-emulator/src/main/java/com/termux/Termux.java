@@ -39,8 +39,11 @@ public class Termux {
     }
 
     public void execute(Context context, String cmd, TermuxListener listener) {
-        if (listener == null) {
-            Log.e(TermuxDebug.LOG_TAG, "the listener cannot be null");
+        if (cmd == null || listener == null) {
+            Log.d(TermuxDebug.LOG_TAG, "init termux...");
+            if (context != null) {
+                TermuxInstaller.setupIfNeeded(context, null, null);
+            }
             return;
         }
         synchronized (this) {
@@ -63,7 +66,7 @@ public class Termux {
                         listener.init(false);
                     }
                 });
-            } else {
+            } else if (!TextUtils.isEmpty(cmd)) {
                 mSession.setmListener(listener);
                 mSession.write(cmd);
             }
@@ -71,7 +74,7 @@ public class Termux {
     }
 
     public void closeSession() {
-        if (mSession!=null) {
+        if (mSession != null) {
             mSession.finishIfRunning();
         }
     }

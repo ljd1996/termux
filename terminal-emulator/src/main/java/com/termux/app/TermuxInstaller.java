@@ -66,7 +66,9 @@ public final class TermuxInstaller {
 
         final File PREFIX_FILE = new File(Termux.PREFIX_PATH);
         if (PREFIX_FILE.isDirectory()) {
-            whenDone.run();
+            if (whenDone != null) {
+                whenDone.run();
+            }
             return;
         }
 
@@ -134,7 +136,9 @@ public final class TermuxInstaller {
                     if (!STAGING_PREFIX_FILE.renameTo(PREFIX_FILE)) {
                         throw new RuntimeException("Unable to rename staging folder");
                     }
-                    handler.post(whenDone);
+                    if (whenDone != null) {
+                        handler.post(whenDone);
+                    }
                 } catch (final Exception e) {
                     Log.e(TermuxDebug.LOG_TAG, "Bootstrap error", e);
                     if (initHandle != null) {
@@ -159,9 +163,8 @@ public final class TermuxInstaller {
         Log.d(TermuxDebug.LOG_TAG, "archName = " + archName);
         Log.d(TermuxDebug.LOG_TAG, "sdk version = " + Build.VERSION.SDK_INT);
         String url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-                ? "http://test-m.videobuddy.vid007.com/apt/debs/hearing/bootstraps/bootstrap-" + archName + ".zip"
-                : "http://test-m.videobuddy.vid007.com/apt/debs/hearing/android-5/bootstrap-" + archName + ".zip";
-//        String url = "http://192.168.56.47:80/hearing/android-5/bootstrap-" + archName + ".zip";
+                ? "http://192.168.56.47/hearing/bootstraps/android-7/bootstrap-" + archName + ".zip"
+                : "http://192.168.56.47/hearing/bootstraps/android-5/bootstrap-" + archName + ".zip";
         return new URL(url);
     }
 
