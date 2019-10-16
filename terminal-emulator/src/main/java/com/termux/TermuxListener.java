@@ -7,7 +7,5 @@ package com.termux;
  */
 public interface TermuxListener {
 
-    void init(boolean isSuccess);
-
     void execute(String cmd, boolean isSuccess);
 }

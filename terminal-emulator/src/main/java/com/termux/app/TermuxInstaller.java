@@ -3,25 +3,21 @@ package com.termux.app;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.UserManager;
 import android.system.Os;
 import android.util.Log;
 import android.util.Pair;
 
 import com.termux.Termux;
-import com.termux.TermuxHelper;
 import com.termux.TermuxListener;
 import com.termux.terminal.TermuxDebug;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,107 +45,139 @@ import java.util.zip.ZipInputStream;
  */
 public final class TermuxInstaller {
 
-    /**
-     * Performs setup if necessary.
-     */
-    public static void setupIfNeeded(final Context context, TermuxListener initHandle, final Runnable whenDone) {
-        // TermuxHelper can only be run as the primary user (device owner) since only that
-        // account has the expected file system paths. Verify that:
+    private File mUsrFile;
+    private TermuxListener mListener;
+
+    public TermuxInstaller() {
+        mUsrFile = new File(Termux.PREFIX_PATH);
+    }
+
+    public void setListener(TermuxListener listener) {
+        this.mListener = listener;
+    }
+
+    public boolean isSetup() {
+        return mUsrFile.exists() && mUsrFile.isDirectory();
+    }
+
+    public void setupIfNeeded(Context context) {
+        if (context == null) {
+            return;
+        }
         UserManager um = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        if (um == null) {
+            if (mListener != null) {
+                mListener.execute(null, false);
+            }
+            return;
+        }
         boolean isPrimaryUser = um.getSerialNumberForUser(android.os.Process.myUserHandle()) == 0;
         if (!isPrimaryUser) {
-            if (initHandle != null) {
-                initHandle.init(false);
+            if (mListener != null) {
+                mListener.execute(null, false);
             }
             return;
         }
 
-        final File PREFIX_FILE = new File(Termux.PREFIX_PATH);
-        if (PREFIX_FILE.isDirectory()) {
-            if (whenDone != null) {
-                whenDone.run();
+        if (mUsrFile.isDirectory()) {
+            if (mListener != null) {
+                mListener.execute(null, true);
             }
             return;
         }
 
-        Handler handler = new Handler(Looper.getMainLooper());
+        if (mUsrFile.exists()) {
+            mUsrFile.delete();
+        }
 
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    final String STAGING_PREFIX_PATH = Termux.FILES_PATH + "/usr-staging";
-                    final File STAGING_PREFIX_FILE = new File(STAGING_PREFIX_PATH);
+        setupEnv();
+    }
 
-                    if (STAGING_PREFIX_FILE.exists()) {
-                        deleteFolder(STAGING_PREFIX_FILE);
+    private void setupEnv() {
+        // download bootstraps.zip
+        boolean success = true;
+        if (success) {
+            // download success
+            File file = new File("bootstrap-xxx.zip");
+            try {
+                downloadSuccess(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (mListener != null) {
+                    mListener.execute(null, false);
+                }
+            }
+            if (mListener != null) {
+                mListener.execute(null, true);
+            }
+        } else {
+            // download fail
+            if (mListener != null) {
+                mListener.execute(null, false);
+            }
+        }
+    }
+
+    private void downloadSuccess(File file) throws Exception {
+        final byte[] buffer = new byte[8096];
+        final List<Pair<String, String>> symlinks = new ArrayList<>(50);
+        final File usrStaging = new File(Termux.STAGING_PREFIX_PATH);
+
+        if (usrStaging.exists()) {
+            deleteFolder(usrStaging);
+        }
+
+        ZipInputStream zipInput = new ZipInputStream(new FileInputStream(file));
+        ZipEntry zipEntry;
+        while ((zipEntry = zipInput.getNextEntry()) != null) {
+            if (zipEntry.getName().equals("SYMLINKS.txt")) {
+                BufferedReader symlinksReader = new BufferedReader(new InputStreamReader(zipInput));
+                String line;
+                while ((line = symlinksReader.readLine()) != null) {
+                    String[] parts = line.split("←");
+                    if (parts.length != 2) {
+                        throw new RuntimeException("Malformed symlink line: " + line);
                     }
+                    String oldPath = parts[0];
+                    String newPath = Termux.STAGING_PREFIX_PATH + "/" + parts[1];
+                    symlinks.add(Pair.create(oldPath, newPath));
 
-                    final byte[] buffer = new byte[8096];
-                    final List<Pair<String, String>> symlinks = new ArrayList<>(50);
+                    ensureDirectoryExists(new File(newPath).getParentFile());
+                }
+            } else {
+                String zipEntryName = zipEntry.getName();
+                File targetFile = new File(Termux.STAGING_PREFIX_PATH, zipEntryName);
+                boolean isDirectory = zipEntry.isDirectory();
 
-                    final URL zipUrl = determineZipUrl();
-                    try (ZipInputStream zipInput = new ZipInputStream(zipUrl.openStream())) {
-                        ZipEntry zipEntry;
-                        while ((zipEntry = zipInput.getNextEntry()) != null) {
-                            if (zipEntry.getName().equals("SYMLINKS.txt")) {
-                                BufferedReader symlinksReader = new BufferedReader(new InputStreamReader(zipInput));
-                                String line;
-                                while ((line = symlinksReader.readLine()) != null) {
-                                    String[] parts = line.split("←");
-                                    if (parts.length != 2)
-                                        throw new RuntimeException("Malformed symlink line: " + line);
-                                    String oldPath = parts[0];
-                                    String newPath = STAGING_PREFIX_PATH + "/" + parts[1];
-                                    symlinks.add(Pair.create(oldPath, newPath));
+                ensureDirectoryExists(isDirectory ? targetFile : targetFile.getParentFile());
 
-                                    ensureDirectoryExists(new File(newPath).getParentFile());
-                                }
-                            } else {
-                                String zipEntryName = zipEntry.getName();
-                                File targetFile = new File(STAGING_PREFIX_PATH, zipEntryName);
-                                boolean isDirectory = zipEntry.isDirectory();
-
-                                ensureDirectoryExists(isDirectory ? targetFile : targetFile.getParentFile());
-
-                                if (!isDirectory) {
-                                    try (FileOutputStream outStream = new FileOutputStream(targetFile)) {
-                                        int readBytes;
-                                        while ((readBytes = zipInput.read(buffer)) != -1)
-                                            outStream.write(buffer, 0, readBytes);
-                                    }
-                                    if (zipEntryName.startsWith("bin/") || zipEntryName.startsWith("libexec") || zipEntryName.startsWith("lib/apt/methods")) {
-                                        //noinspection OctalInteger
-                                        Os.chmod(targetFile.getAbsolutePath(), 0700);
-                                    }
-                                }
-                            }
-                        }
+                if (!isDirectory) {
+                    try (FileOutputStream outStream = new FileOutputStream(targetFile)) {
+                        int readBytes;
+                        while ((readBytes = zipInput.read(buffer)) != -1)
+                            outStream.write(buffer, 0, readBytes);
                     }
-
-                    if (symlinks.isEmpty())
-                        throw new RuntimeException("No SYMLINKS.txt encountered");
-                    for (Pair<String, String> symlink : symlinks) {
-                        Os.symlink(symlink.first, symlink.second);
-                    }
-
-                    if (!STAGING_PREFIX_FILE.renameTo(PREFIX_FILE)) {
-                        throw new RuntimeException("Unable to rename staging folder");
-                    }
-                    if (whenDone != null) {
-                        handler.post(whenDone);
-                    }
-                } catch (final Exception e) {
-                    Log.e(TermuxDebug.LOG_TAG, "Bootstrap error", e);
-                    if (initHandle != null) {
-                        handler.post(() -> initHandle.init(false));
+                    if (zipEntryName.startsWith("bin/") || zipEntryName.startsWith("libexec") || zipEntryName.startsWith("lib/apt/methods")) {
+                        //noinspection OctalInteger
+                        Os.chmod(targetFile.getAbsolutePath(), 0700);
                     }
                 }
             }
-        }.start();
+        }
+
+        if (symlinks.isEmpty()) {
+            throw new RuntimeException("No SYMLINKS.txt encountered");
+        }
+        for (Pair<String, String> symlink : symlinks) {
+            Os.symlink(symlink.first, symlink.second);
+        }
+
+        if (!usrStaging.renameTo(mUsrFile)) {
+            throw new RuntimeException("Unable to rename staging folder");
+        }
     }
 
-    private static void ensureDirectoryExists(File directory) {
+    private void ensureDirectoryExists(File directory) {
         if (!directory.isDirectory() && !directory.mkdirs()) {
             throw new RuntimeException("Unable to create directory: " + directory.getAbsolutePath());
         }
@@ -158,17 +186,16 @@ public final class TermuxInstaller {
     /**
      * Get bootstrap zip url for this systems cpu architecture.
      */
-    private static URL determineZipUrl() throws MalformedURLException {
+    private String determineZipUrl() {
         String archName = determineTermuxArchName();
-        Log.d(TermuxDebug.LOG_TAG, "archName = " + archName);
-        Log.d(TermuxDebug.LOG_TAG, "sdk version = " + Build.VERSION.SDK_INT);
-        String url = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-                ? "http://192.168.56.47/hearing/bootstraps/android-7/bootstrap-" + archName + ".zip"
-                : "http://192.168.56.47/hearing/bootstraps/android-5/bootstrap-" + archName + ".zip";
-        return new URL(url);
+        Log.d(TermuxDebug.TAG, "archName = " + archName);
+        Log.d(TermuxDebug.TAG, "sdk version = " + Build.VERSION.SDK_INT);
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                ? "https://test-vb-apt.s3.ap-south-1.amazonaws.com/bootstraps/android-7/bootstrap-" + archName + ".zip"
+                : "https://test-vb-apt.s3.ap-south-1.amazonaws.com/bootstraps/android-5/bootstrap-" + archName + ".zip";
     }
 
-    private static String determineTermuxArchName() {
+    private String determineTermuxArchName() {
         // Note that we cannot use System.getProperty("os.arch") since that may give e.g. "aarch64"
         // while a 64-bit runtime may not be installed (like on the Samsung Galaxy S5 Neo).
         // Instead we search through the supported abi:s on the device, see:
@@ -195,7 +222,7 @@ public final class TermuxInstaller {
     /**
      * Delete a folder and all its content or throw. Don't follow symlinks.
      */
-    static void deleteFolder(File fileOrDirectory) throws IOException {
+    private void deleteFolder(File fileOrDirectory) throws IOException {
         if (fileOrDirectory.getCanonicalPath().equals(fileOrDirectory.getAbsolutePath()) && fileOrDirectory.isDirectory()) {
             File[] children = fileOrDirectory.listFiles();
 
@@ -210,60 +237,4 @@ public final class TermuxInstaller {
             throw new RuntimeException("Unable to delete " + (fileOrDirectory.isDirectory() ? "directory " : "file ") + fileOrDirectory.getAbsolutePath());
         }
     }
-
-    public static void setupStorageSymlinks(final Context context) {
-        final String LOG_TAG = "termux-storage";
-        new Thread() {
-            public void run() {
-                try {
-                    File storageDir = new File(Termux.HOME_PATH, "storage");
-
-                    if (storageDir.exists()) {
-                        try {
-                            deleteFolder(storageDir);
-                        } catch (IOException e) {
-                            Log.e(LOG_TAG, "Could not delete old $HOME/storage, " + e.getMessage());
-                            return;
-                        }
-                    }
-
-                    if (!storageDir.mkdirs()) {
-                        Log.e(LOG_TAG, "Unable to mkdirs() for $HOME/storage");
-                        return;
-                    }
-
-                    File sharedDir = Environment.getExternalStorageDirectory();
-                    Os.symlink(sharedDir.getAbsolutePath(), new File(storageDir, "shared").getAbsolutePath());
-
-                    File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                    Os.symlink(downloadsDir.getAbsolutePath(), new File(storageDir, "downloads").getAbsolutePath());
-
-                    File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-                    Os.symlink(dcimDir.getAbsolutePath(), new File(storageDir, "dcim").getAbsolutePath());
-
-                    File picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-                    Os.symlink(picturesDir.getAbsolutePath(), new File(storageDir, "pictures").getAbsolutePath());
-
-                    File musicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
-                    Os.symlink(musicDir.getAbsolutePath(), new File(storageDir, "music").getAbsolutePath());
-
-                    File moviesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
-                    Os.symlink(moviesDir.getAbsolutePath(), new File(storageDir, "movies").getAbsolutePath());
-
-                    final File[] dirs = context.getExternalFilesDirs(null);
-                    if (dirs != null && dirs.length > 1) {
-                        for (int i = 1; i < dirs.length; i++) {
-                            File dir = dirs[i];
-                            if (dir == null) continue;
-                            String symlinkName = "external-" + i;
-                            Os.symlink(dir.getAbsolutePath(), new File(storageDir, symlinkName).getAbsolutePath());
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.e(LOG_TAG, "Error setting up link", e);
-                }
-            }
-        }.start();
-    }
-
 }

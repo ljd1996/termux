@@ -38,15 +38,14 @@ public final class TerminalSession {
     private volatile String mCurrentCmd = "";
     private TermuxListener mListener;
 
-    public TerminalSession(String shellPath, String cwd, String[] args, String[] env, TermuxListener listener) {
+    public TerminalSession(String shellPath, String cwd, String[] args, String[] env) {
         this.mShellPath = shellPath;
         this.mCwd = cwd;
         this.mArgs = args;
         this.mEnv = env;
-        this.mListener = listener;
     }
 
-    public void setmListener(TermuxListener listener) {
+    public void setListener(TermuxListener listener) {
         this.mListener = listener;
     }
 
@@ -56,12 +55,12 @@ public final class TerminalSession {
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, rows, columns);
         mShellPid = processId[0];
 
-        Log.d(TermuxDebug.LOG_TAG, "mShellPath: " + mShellPath);
-        Log.d(TermuxDebug.LOG_TAG, "mCwd: " + mCwd);
-        Log.d(TermuxDebug.LOG_TAG, "mArgs: " + Arrays.toString(mArgs));
-        Log.d(TermuxDebug.LOG_TAG, "mEnv: " + Arrays.toString(mEnv));
-        Log.d(TermuxDebug.LOG_TAG, "mShellPid: " + mShellPid);
-        Log.d(TermuxDebug.LOG_TAG, "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
+        Log.d(TermuxDebug.TAG, "mShellPath: " + mShellPath);
+        Log.d(TermuxDebug.TAG, "mCwd: " + mCwd);
+        Log.d(TermuxDebug.TAG, "mArgs: " + Arrays.toString(mArgs));
+        Log.d(TermuxDebug.TAG, "mEnv: " + Arrays.toString(mEnv));
+        Log.d(TermuxDebug.TAG, "mShellPid: " + mShellPid);
+        Log.d(TermuxDebug.TAG, "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
 
         final FileDescriptor terminalFileDescriptorWrapped = wrapFileDescriptor(mTerminalFileDescriptor);
 
@@ -76,7 +75,7 @@ public final class TerminalSession {
 
                         String result = new String(buffer, 0, read);
 
-                        Log.d(TermuxDebug.LOG_TAG, "result = " + result);
+                        Log.d(TermuxDebug.TAG, "result = " + result);
 
                         if (!TextUtils.isEmpty(result) && result.trim().startsWith(mCurrentCmd) && mListener != null) {
                             mListener.execute(mCurrentCmd, result.trim().replace(mCurrentCmd, "").trim().startsWith(SUCCESS_CODE));
@@ -98,7 +97,10 @@ public final class TerminalSession {
                         if (bytesToWrite == -1) return;
 
                         mCurrentCmd = new String(buffer, 0, bytesToWrite);
-                        Log.d(TermuxDebug.LOG_TAG, "mCurrentCmd = " + mCurrentCmd);
+                        if (TextUtils.isEmpty(mCurrentCmd.trim())) {
+                            continue;
+                        }
+                        Log.d(TermuxDebug.TAG, "mCurrentCmd = " + mCurrentCmd);
 
                         byte[] cmd = wrapCmd(buffer, bytesToWrite);
                         termOut.write(cmd, 0, cmd.length);
@@ -114,7 +116,7 @@ public final class TerminalSession {
             public void run() {
                 int processExitCode = JNI.waitFor(mShellPid);
                 cleanupResources();
-                Log.d(TermuxDebug.LOG_TAG, "exitCode = " + processExitCode);
+                Log.d(TermuxDebug.TAG, "exitCode = " + processExitCode);
             }
         }.start();
     }
@@ -145,7 +147,7 @@ public final class TerminalSession {
             descriptorField.setAccessible(true);
             descriptorField.set(result, fileDescriptor);
         } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
-            Log.wtf(TermuxDebug.LOG_TAG, "Error accessing FileDescriptor#descriptor private field", e);
+            Log.wtf(TermuxDebug.TAG, "Error accessing FileDescriptor#descriptor private field", e);
             System.exit(1);
         }
         return result;
