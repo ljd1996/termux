@@ -98,7 +98,7 @@ public final class TermuxInstaller {
         boolean success = true;
         if (success) {
             // download success
-            File file = new File("bootstrap-xxx.zip");
+            File file = new File("/sdcard/bootstrap-aarch64.zip");
             try {
                 downloadSuccess(file);
             } catch (Exception e) {

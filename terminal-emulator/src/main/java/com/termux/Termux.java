@@ -4,11 +4,13 @@ package com.termux;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.termux.app.BackgroundJob;
 import com.termux.app.TermuxInstaller;
 import com.termux.terminal.CmdElement;
 import com.termux.terminal.TerminalSession;
+import com.termux.terminal.TermuxDebug;
 
 import java.io.File;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -135,6 +137,7 @@ public class Termux {
 
         if (executablePath == null) {
             // Fall back to system shell as last resort:
+            Log.d(TermuxDebug.TAG, "fall back to system shell");
             executablePath = "/system/bin/sh";
         }
 
