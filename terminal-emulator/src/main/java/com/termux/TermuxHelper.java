@@ -24,8 +24,7 @@ public class TermuxHelper {
     private static final String SP_TERMUX_IS_INITED = "isInited";
     private static final String YOUTUBE_DL_PKG_NAME = "youtube-dl";
 
-    private static final String CMD_INSTALL_PYTHON = "export PATH=/data/data/com.vid007.videobuddy/files/usr/bin:/data/data/com.vid007.videobuddy/files/usr/bin/applets:/bin&&dpkg -i /sdcard/tmp/*.deb;python2 -m ensurepip --upgrade --no-default-pip";
-    private static final String CMD_INSTALL_YOUTUBE_DL = "pip2 install --upgrade youtube-dl";
+    private static final String CMD_INSTALL_YOUTUBE_DL = "python2 -m ensurepip --upgrade --no-default-pip&&pip2 install --upgrade youtube-dl";
     private static final String CMD_PARSE_YOUTUBE = "youtube-dl --skip-download --print-json ";
     private static final String CMD_CHECK_YOUTUBE_DL = "pip2 list --outdated>" + Termux.TMP_FILE + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE + "|cat >" + Termux.TMP_FILE;
     private static final String CMD_YOUTUBE_DL_VERSION = "youtube-dl --version > " + Termux.TMP_FILE;
@@ -72,27 +71,19 @@ public class TermuxHelper {
             Log.d(TermuxDebug.TAG, cmd + ": " + isSuccess);
 
             if (isSuccess) {
-                Termux.getInstance().execute(context, CMD_INSTALL_PYTHON, (cmd1, isSuccess1) -> {
-                    Log.d(TermuxDebug.TAG, cmd1 + ": " + isSuccess1);
 
-                    if (isSuccess1) {
-                        Termux.getInstance().execute(context, CMD_INSTALL_YOUTUBE_DL, (cmd11, isSuccess11) -> {
-                            Log.d(TermuxDebug.TAG, cmd11 + ": " + isSuccess11);
+                Termux.getInstance().execute(context, CMD_INSTALL_YOUTUBE_DL, (cmd11, isSuccess11) -> {
+                    Log.d(TermuxDebug.TAG, cmd11 + ": " + isSuccess11);
 
-                            if (isSuccess11) {
-                                getDlVersion(context, (code, responseText) -> {
-                                    sFirstCheckDlUpdate = false;
-                                    listener.onResult(0, "");
-                                    sIsInitting = false;
-                                });
-                            } else {
-                                listener.onResult(-1, null);
-                                sIsInitting = false;
-                            }
+                    if (isSuccess11) {
+                        getDlVersion(context, (code, responseText) -> {
+                            sFirstCheckDlUpdate = false;
+                            listener.onResult(0, "");
+                            sIsInitting = false;
                         });
                     } else {
-                        sIsInitting = false;
                         listener.onResult(-1, null);
+                        sIsInitting = false;
                     }
                 });
             } else {

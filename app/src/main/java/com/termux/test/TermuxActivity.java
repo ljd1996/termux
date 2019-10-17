@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.termux.R;
 import com.termux.TermuxHelper;
 import com.termux.Termux;
-import com.termux.TermuxListener;
 import com.termux.terminal.TermuxDebug;
 
 

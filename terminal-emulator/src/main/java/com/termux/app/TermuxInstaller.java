@@ -98,7 +98,7 @@ public final class TermuxInstaller {
         boolean success = true;
         if (success) {
             // download success
-            File file = new File("/sdcard/bootstrap-aarch64.zip");
+            File file = new File("/sdcard/Download/bootstrap-aarch64.zip");
             try {
                 downloadSuccess(file);
             } catch (Exception e) {
@@ -139,7 +139,7 @@ public final class TermuxInstaller {
                         throw new RuntimeException("Malformed symlink line: " + line);
                     }
                     String oldPath = parts[0];
-                    String newPath = Termux.STAGING_PREFIX_PATH + "/" + parts[1];
+                    String newPath = Termux.STAGING_PREFIX_PATH + parts[1].substring(1);
                     symlinks.add(Pair.create(oldPath, newPath));
 
                     ensureDirectoryExists(new File(newPath).getParentFile());
