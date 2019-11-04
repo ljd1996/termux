@@ -7,10 +7,10 @@ apply plugin: 'com.android.library'
 
 ext {
     bintrayName = 'terminal-emulator'
-    publishedGroupId = 'com.termux.core'
+    publishedGroupId = 'com.termux'
     libraryName = 'TerminalEmulator'
     artifact = 'terminal-emulator'
-    libraryDescription = 'The terminal emulator used in TermuxHelper'
+    libraryDescription = 'The terminal emulator used in Termux'
     siteUrl = 'https://github.com/termux/termux'
     gitUrl = 'https://github.com/termux/termux.git'
     libraryVersion = '0.52'
@@ -60,7 +60,6 @@ tasks.withType(Test) {
 }
 
 dependencies {
-    implementation "androidx.annotation:annotation:1.1.0"
     testImplementation 'junit:junit:4.12'
 }
 

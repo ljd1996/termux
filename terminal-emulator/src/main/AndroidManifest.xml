@@ -1,21 +1,2 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.termux.core">
-
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-    <uses-feature android:name="android.software.leanback" android:required="false" />
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
-    <application>
-
-        <!-- This (or rather, value 2.1 or higher) is needed to make the Samsung Galaxy S8
-             mark the app with "This app is optimized to run in full screen." -->
-        <meta-data android:name="android.max_aspect" android:value="10.0" />
-        <meta-data android:name="com.sec.android.support.multiwindow" android:value="true" />
-    </application>
-
+<manifest package="com.termux.terminal">
 </manifest>
