@@ -29,6 +29,8 @@ public class TermuxHelper {
     private static final String CMD_PARSE_YOUTUBE = "youtube-dl --skip-download --print-json ";
     private static final String CMD_CHECK_YOUTUBE_DL = "pip2 list --outdated>" + Termux.TMP_FILE + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE + "|cat >" + Termux.TMP_FILE;
     private static final String CMD_YOUTUBE_DL_VERSION = "youtube-dl --version > " + Termux.TMP_FILE;
+    private static final String CMD_KILL_YOUTUBE_DL = "ps -ef>" + Termux.TMP_FILE1 + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE1 + "|cat >" + Termux.TMP_FILE1;
+    private static final String CMD_KILL_PROCESS = "kill -9 ";
 
     private static boolean sIsDlUpdating = false;
     private static boolean sFirstCheckDlUpdate = true;
@@ -152,6 +154,23 @@ public class TermuxHelper {
         } else {
             doParse(context, url, listener);
         }
+    }
+
+    public static void killParseTask(Context context) {
+        Termux.getInstance().execute(context, CMD_KILL_YOUTUBE_DL, (cmd, isSuccess) -> {
+            Log.d(TermuxDebug.TAG, cmd + ": " + isSuccess);
+            if (isSuccess) {
+                String result = readFile(Termux.TMP_FILE1);
+                Log.d(TermuxDebug.TAG, "result = " + result);
+                if (!TextUtils.isEmpty(result)) {
+                    try {
+                        String pid = result.split(" ")[1].trim();
+                        Termux.getInstance().execute(context, CMD_KILL_PROCESS + pid, (cmd1, isSuccess1) -> Log.d(TermuxDebug.TAG, cmd1 + ": " + isSuccess1));
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        });
     }
 
     private static void getDlVersion(Context context, OnExecuteListener listener) {

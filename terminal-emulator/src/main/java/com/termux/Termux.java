@@ -20,9 +20,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class Termux {
 
     @SuppressLint("SdCardPath")
-    public static final String FILES_PATH = "/data/data/com.vid007.videobuddy/files";
-    @SuppressLint("SdCardPath")
-    public static final String TMP_FILE = "/data/data/com.vid007.videobuddy/files/home/tmp.txt";
+    private static final String FILES_PATH = "/data/data/com.vid007.videobuddy/files";
+    public static final String TMP_FILE = FILES_PATH + "/home/tmp.txt";
+    public static final String TMP_FILE1 = FILES_PATH + "/home/tmp1.txt";
     public static final String PREFIX_PATH = FILES_PATH + "/usr";
     public static final String HOME_PATH = FILES_PATH + "/home";
     public static final String STAGING_PREFIX_PATH = Termux.FILES_PATH + "/usr-staging";
