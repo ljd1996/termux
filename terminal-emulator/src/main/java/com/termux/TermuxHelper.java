@@ -24,8 +24,10 @@ public class TermuxHelper {
     private static final String SP_TERMUX_IS_INITED = "isInited";
     private static final String YOUTUBE_DL_PKG_NAME = "youtube-dl";
 
-    private static final String CMD_INSTALL_YOUTUBE_DL = "python2 -m ensurepip --upgrade --no-default-pip&&pip2 install --upgrade youtube-dl";
-    private static final String CMD_PARSE_YOUTUBE = "youtube-dl --skip-download --print-json ";
+    private static final String CMD_INSTALL_YOUTUBE_DL = "python2 -m ensurepip --upgrade --no-default-pip&&pip2 install --upgrade youtube-dl&&pip2 install youtube-dl-server";
+    private static final String CMD_UPDATE_YOUTUBE_DL = "pip2 install --upgrade youtube-dl";
+    private static final String CMD_START_YOUTUBE_SERVER = "(nohup youtube-dl-server --number-processes 1 --host 0.0.0.0 --port 9191 &)";
+    private static final String CMD_PARSE_YOUTUBE = "curl http://0.0.0.0:9191/api/info?url=";
     private static final String CMD_CHECK_YOUTUBE_DL = "pip2 list --outdated>" + Termux.TMP_FILE + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE + "|cat >" + Termux.TMP_FILE;
     private static final String CMD_YOUTUBE_DL_VERSION = "youtube-dl --version > " + Termux.TMP_FILE;
 
@@ -76,10 +78,13 @@ public class TermuxHelper {
                     Log.d(TermuxDebug.TAG, cmd11 + ": " + isSuccess11);
 
                     if (isSuccess11) {
-                        getDlVersion(context, (code, responseText) -> {
-                            sFirstCheckDlUpdate = false;
-                            listener.onResult(0, "");
-                            sIsInitting = false;
+                        Termux.getInstance().execute(context, CMD_START_YOUTUBE_SERVER, (cmd1, isSuccess1) -> {
+                            Log.d(TermuxDebug.TAG, cmd1 + ": " + isSuccess1);
+                            getDlVersion(context, (code, responseText) -> {
+                                sFirstCheckDlUpdate = false;
+                                listener.onResult(0, "");
+                                sIsInitting = false;
+                            });
                         });
                     } else {
                         listener.onResult(-1, null);
@@ -121,7 +126,7 @@ public class TermuxHelper {
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            Termux.getInstance().execute(context, CMD_INSTALL_YOUTUBE_DL, (cmd1, isSuccess1) -> {
+                            Termux.getInstance().execute(context, CMD_UPDATE_YOUTUBE_DL, (cmd1, isSuccess1) -> {
                                 Log.d(TermuxDebug.TAG, cmd1 + ": " + isSuccess1);
                                 if (isSuccess1) {
                                 } else {
