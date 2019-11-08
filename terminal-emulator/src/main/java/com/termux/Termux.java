@@ -1,14 +1,15 @@
 package com.termux;
 
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.termux.app.BackgroundJob;
 import com.termux.app.TermuxInstaller;
 import com.termux.terminal.CmdElement;
 import com.termux.terminal.TerminalSession;
+import com.termux.terminal.TermuxDebug;
 
 import java.io.File;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -34,48 +35,42 @@ public class Termux {
     private Termux() {
         mCmdQueue = new ArrayBlockingQueue<>(8);
         new Thread(() -> {
-            CmdElement element = null;
+            CmdElement element;
             while (true) {
                 try {
-                    if (element == null) {
-                        element = mCmdQueue.take();
-                    } else {
-                        String cmd = element.getCmd();
-                        TermuxListener listener = element.getListener();
-                        if (listener == null || TextUtils.isEmpty(cmd)) {
-                            element = null;
+                    element = mCmdQueue.take();
+                    String cmd = element.getCmd();
+                    TermuxListener listener = element.getListener();
+                    if (listener == null || TextUtils.isEmpty(cmd)) {
+                        continue;
+                    }
+                    mIsExed = false;
+                    if (mSession == null) {
+                        try {
+                            mSession = createSession();
+                        } catch (Exception e) {
+                            listener.execute(null, false);
                             continue;
                         }
-                        mIsExed = false;
-                        if (mSession == null) {
-                            try {
-                                mSession = createSession();
-                            } catch (Exception e) {
-                                listener.execute(null, false);
-                                element = null;
-                                continue;
-                            }
-                            if (mSession != null) {
-                                mSession.setListener((cmd12, isSuccess) -> {
-                                    listener.execute(cmd12, isSuccess);
-                                    mIsExed = true;
-                                });
-                                mSession.write(cmd);
-                            } else {
-                                listener.execute(null, false);
-                                element = null;
-                                continue;
-                            }
-                        } else {
-                            mSession.setListener((cmd1, isSuccess) -> {
-                                listener.execute(cmd1, isSuccess);
+                        if (mSession != null) {
+                            mSession.setListener((cmd12, isSuccess) -> {
+                                listener.execute(cmd12, isSuccess);
                                 mIsExed = true;
                             });
                             mSession.write(cmd);
+                        } else {
+                            listener.execute(null, false);
+                            continue;
                         }
-                        element = null;
-                        while (!mIsExed) ;
+                    } else {
+                        mSession.setListener((cmd1, isSuccess) -> {
+                            listener.execute(cmd1, isSuccess);
+                            mIsExed = true;
+                        });
+                        mSession.write(cmd);
                     }
+                    while (!mIsExed) ;
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -94,9 +89,6 @@ public class Termux {
     public void execute(Context context, String cmd, TermuxListener listener) {
         // listener不能为null
         if (context == null || listener == null) {
-            if (listener != null) {
-                listener.execute(cmd, false);
-            }
             return;
         }
 
@@ -113,7 +105,15 @@ public class Termux {
         }
     }
 
+    public void clearQueue() {
+        if (mCmdQueue != null) {
+            mCmdQueue.clear();
+        }
+    }
+
     public void closeSession() {
+        clearQueue();
+        mIsExed = true;
         if (mSession != null) {
             mSession.finishIfRunning();
             mSession = null;
@@ -134,7 +134,7 @@ public class Termux {
         }
 
         if (executablePath == null) {
-            // Fall back to system shell as last resort:
+            Log.d(TermuxDebug.TAG, "fall back to system shell");
             executablePath = "/system/bin/sh";
         }
 

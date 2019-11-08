@@ -51,7 +51,18 @@ public class TermuxHelper {
         return context.getSharedPreferences(TermuxHelper.SP_TERMUX_NAME, Context.MODE_PRIVATE);
     }
 
-    public static void init(Context context, OnExecuteListener listener) {
+    public static void initTermux(Context context) {
+        if (!isInited(context)) {
+            init(context, (code, responseText) -> {
+                Log.d(TermuxDebug.TAG, "init termux code = " + code);
+                if (code == 0) {
+                    setInited(context);
+                }
+            });
+        }
+    }
+
+    private static void init(Context context, OnExecuteListener listener) {
         if (sIsInitting || listener == null) {
             if (listener != null) {
                 listener.onResult(-1, null);
@@ -231,6 +242,18 @@ public class TermuxHelper {
             e.printStackTrace();
         }
         return String.valueOf(stringBuilder);
+    }
+
+    public static void clearAllTask() {
+        Termux.getInstance().clearQueue();
+    }
+
+    public static void destroy(Context context) {
+        if (isInited(context)) {
+            sIsDlUpdating = false;
+            sIsInitting = false;
+            Termux.getInstance().closeSession();
+        }
     }
 
     public interface OnExecuteListener {

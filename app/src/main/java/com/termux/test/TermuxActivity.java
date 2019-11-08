@@ -31,19 +31,7 @@ public class TermuxActivity extends Activity {
 
         textView = findViewById(R.id.text);
 
-        initTermux();
-    }
-
-    private void initTermux() {
-        if (!TermuxHelper.isInited(this)) {
-            Log.d(TermuxDebug.TAG, "begin to init");
-            TermuxHelper.init(this, (code, responseText) -> {
-                Log.d(TermuxDebug.TAG, "init termux code = " + code);
-                if (code == 0) {
-                    TermuxHelper.setInited(this);
-                }
-            });
-        }
+        TermuxHelper.initTermux(this);
     }
 
     public void btn1(View view) {
