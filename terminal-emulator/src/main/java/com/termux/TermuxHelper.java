@@ -27,7 +27,7 @@ public class TermuxHelper {
     private static final String CMD_INSTALL_PYTHON = "apt update&&apt -y install python2";
     private static final String CMD_INSTALL_YOUTUBE_DL = "pip2 install --upgrade youtube-dl";
     private static final String CMD_PARSE_YOUTUBE = "youtube-dl --skip-download --print-json ";
-    private static final String CMD_CHECK_YOUTUBE_DL = "pip2 list --outdated>" + Termux.TMP_FILE + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE + "|cat >" + Termux.TMP_FILE;
+    private static final String CMD_CHECK_YOUTUBE_DL = "pip2 list --outdated>" + Termux.TMP_FILE + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE + "|cat >" + Termux.TMP_FILE1;
     private static final String CMD_YOUTUBE_DL_VERSION = "youtube-dl --version > " + Termux.TMP_FILE;
     private static final String CMD_KILL_YOUTUBE_DL = "ps -ef>" + Termux.TMP_FILE1 + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE1 + "|cat >" + Termux.TMP_FILE1;
     private static final String CMD_KILL_PROCESS = "kill -9 ";
@@ -133,7 +133,7 @@ public class TermuxHelper {
                 Termux.getInstance().execute(context, CMD_CHECK_YOUTUBE_DL, (cmd, isSuccess) -> {
                     Log.d(TermuxDebug.TAG, cmd + ": " + isSuccess);
                     if (isSuccess) {
-                        String versionInfo = readFile(Termux.TMP_FILE);
+                        String versionInfo = readFile(Termux.TMP_FILE1);
                         Log.d(TermuxDebug.TAG, "versionInfo = " + versionInfo);
                         if (!TextUtils.isEmpty(versionInfo) && versionInfo.trim().startsWith(YOUTUBE_DL_PKG_NAME)) {
                             listener.onResult(-1, null);

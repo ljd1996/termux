@@ -75,7 +75,7 @@ public final class TerminalSession {
 
                         String result = new String(buffer, 0, read);
 
-                        Log.d(TermuxDebug.TAG, "result = " + result);
+//                        Log.d(TermuxDebug.TAG, "result = " + result);
 
                         if (!TextUtils.isEmpty(result) && result.trim().startsWith(mCurrentCmd) && mListener != null) {
                             mListener.execute(mCurrentCmd, result.trim().replace(mCurrentCmd, "").trim().startsWith(SUCCESS_CODE));
