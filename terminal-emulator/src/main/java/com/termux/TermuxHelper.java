@@ -36,11 +36,11 @@ public class TermuxHelper {
     private static boolean sFirstCheckDlUpdate = true;
     private static boolean sIsInitting = false;
 
-    public static boolean isInited(Context context) {
+    private static boolean isInited(Context context) {
         return getSPref(context).getBoolean(TermuxHelper.SP_TERMUX_IS_INITED, false);
     }
 
-    public static void setInited(Context context) {
+    private static void setInited(Context context) {
         SharedPreferences preferences = getSPref(context);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(TermuxHelper.SP_TERMUX_IS_INITED, true);
@@ -113,6 +113,23 @@ public class TermuxHelper {
                 listener.onResult(-1, null);
             }
         });
+    }
+
+    public static void execute(Context context, String cmd, String resultFile, OnExecuteListener listener) {
+        if (context == null || TextUtils.isEmpty(cmd) || listener == null) {
+            if (listener != null) {
+                listener.onResult(-1, null);
+            }
+            return;
+        }
+        new Thread(() -> Termux.getInstance().execute(context, cmd, (cmd1, isSuccess) -> {
+            Log.d(TermuxDebug.TAG, cmd1 + ": " + isSuccess);
+            if (isSuccess) {
+                listener.onResult(0, readFile(resultFile));
+            } else {
+                listener.onResult(-1, null);
+            }
+        })).start();
     }
 
     public static void parseYoutube(Context context, String url, OnExecuteListener listener) {
@@ -218,10 +235,17 @@ public class TermuxHelper {
     }
 
     private static String getDlFileName(String url) {
-        return Termux.HOME_PATH + File.separator + FileUtil.md5(url + System.currentTimeMillis());
+        return getResultFile(FileUtil.md5(url + System.currentTimeMillis()));
+    }
+
+    private static String getResultFile(String name) {
+        return Termux.HOME_PATH + File.separator + name;
     }
 
     private static String readFile(String path) {
+        if (TextUtils.isEmpty(path)) {
+            return null;
+        }
         File file = new File(path);
         FileInputStream is;
         StringBuilder stringBuilder = null;
