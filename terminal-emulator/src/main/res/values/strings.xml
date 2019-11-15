@@ -14,6 +14,7 @@
     <string name="file_received_edit_button">Edit</string>
     <string name="file_received_open_folder_button">Open folder</string>
 
-    <string name="cmd_parse_youtube">youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw</string>
-    <string name="cmd_parse_youtube_prefix">youtube-dl --skip-download --print-json </string>
+    <string name="cmd_parse_youtube">curl http://0.0.0.0:9191/api/info?url=https://www.youtube.com/watch?v=QnjtfMZZnOw</string>
+    <string name="cmd_parse_youtube_with_path">curl http://0.0.0.0:9191/api/info?url=https://www.youtube.com/watch?v=QnjtfMZZnOw > /sdcard/result.txt</string>
+    <string name="result_path">/sdcard/result.txt</string>
 </resources>

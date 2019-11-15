@@ -1,4 +1,4 @@
-package com.termux.terminal;
+package com.termux.emulator;
 
 /** A circular byte buffer allowing one producer and one consumer thread. */
 final class ByteQueue {
@@ -8,16 +8,16 @@ final class ByteQueue {
     private int mStoredBytes;
     private boolean mOpen = true;
 
-    public ByteQueue(int size) {
+    ByteQueue(int size) {
         mBuffer = new byte[size];
     }
 
-    public synchronized void close() {
+    synchronized void close() {
         mOpen = false;
         notify();
     }
 
-    public synchronized int read(byte[] buffer, boolean block) {
+    synchronized int read(byte[] buffer, boolean block) {
         while (mStoredBytes == 0 && mOpen) {
             if (block) {
                 try {
@@ -56,7 +56,7 @@ final class ByteQueue {
      * <p/>
      * Returns whether the output was totally written, false if it was closed before.
      */
-    public boolean write(byte[] buffer, int offset, int lengthToWrite) {
+    boolean write(byte[] buffer, int offset, int lengthToWrite) {
         if (lengthToWrite + offset > buffer.length) {
             throw new IllegalArgumentException("length + offset > buffer.length");
         } else if (lengthToWrite <= 0) {

@@ -1,4 +1,4 @@
-package com.termux.terminal;
+package com.termux.emulator;
 
 /**
  * Native methods for creating and managing pseudoterminal subprocesses. C code is in jni/termux.c.

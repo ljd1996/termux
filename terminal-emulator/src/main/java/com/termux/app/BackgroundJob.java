@@ -2,8 +2,7 @@ package com.termux.app;
 
 import android.util.Log;
 
-import com.termux.Termux;
-import com.termux.TermuxHelper;
+import com.termux.util.Termux;
 
 import java.io.BufferedReader;
 import java.io.File;

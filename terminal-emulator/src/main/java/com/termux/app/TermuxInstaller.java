@@ -2,15 +2,13 @@ package com.termux.app;
 
 import android.content.Context;
 import android.os.Build;
-import android.os.Environment;
 import android.os.UserManager;
 import android.system.Os;
 import android.util.Log;
 import android.util.Pair;
 
-import com.termux.Termux;
-import com.termux.TermuxListener;
-import com.termux.terminal.TermuxDebug;
+import com.termux.emulator.OnCommandListener;
+import com.termux.util.Termux;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -46,18 +44,14 @@ import java.util.zip.ZipInputStream;
 public final class TermuxInstaller {
 
     private File mUsrFile;
-    private TermuxListener mListener;
+    private OnCommandListener mListener;
 
     public TermuxInstaller() {
         mUsrFile = new File(Termux.PREFIX_PATH);
     }
 
-    public void setListener(TermuxListener listener) {
+    public void setListener(OnCommandListener listener) {
         this.mListener = listener;
-    }
-
-    public boolean isSetup() {
-        return mUsrFile.exists() && mUsrFile.isDirectory();
     }
 
     public void setupIfNeeded(Context context) {
@@ -188,8 +182,8 @@ public final class TermuxInstaller {
      */
     private String determineZipUrl() {
         String archName = determineTermuxArchName();
-        Log.d(TermuxDebug.TAG, "archName = " + archName);
-        Log.d(TermuxDebug.TAG, "sdk version = " + Build.VERSION.SDK_INT);
+        Log.d(Termux.TAG, "archName = " + archName);
+        Log.d(Termux.TAG, "sdk version = " + Build.VERSION.SDK_INT);
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
                 ? "https://test-vb-apt.s3.ap-south-1.amazonaws.com/bootstraps/android-7/bootstrap-" + archName + ".zip"
                 : "https://test-vb-apt.s3.ap-south-1.amazonaws.com/bootstraps/android-5/bootstrap-" + archName + ".zip";

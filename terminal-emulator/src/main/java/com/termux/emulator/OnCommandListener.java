@@ -1,11 +1,11 @@
-package com.termux;
+package com.termux.emulator;
 
 
 /**
  * @author liujiadong
  * @since 2019/8/29
  */
-public interface TermuxListener {
+public interface OnCommandListener {
 
     void execute(String cmd, boolean isSuccess);
 }
