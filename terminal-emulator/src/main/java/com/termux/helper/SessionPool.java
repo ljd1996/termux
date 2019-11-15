@@ -12,7 +12,7 @@ import java.util.Vector;
  * @since 2019/11/14
  */
 class SessionPool {
-    private static final int MAX_ACTIVE = 5;
+    private static final int MAX_ACTIVE = 8;
 
     private Vector<TerminalSession> mSessions;
 
@@ -20,7 +20,7 @@ class SessionPool {
         mSessions = new Vector<>();
     }
 
-    TerminalSession getSession() {
+    synchronized TerminalSession getSession() {
         TerminalSession session = getFreeSession();
         if (session != null) {
             return session;
@@ -28,12 +28,10 @@ class SessionPool {
 
         Log.d(Termux.TAG, "There is no free session.");
 
-        synchronized (this) {
-            if (mSessions.size() < MAX_ACTIVE) {
-                session = TerminalSession.createSession();
-                mSessions.add(session);
-                return session;
-            }
+        if (mSessions.size() < MAX_ACTIVE) {
+            session = TerminalSession.createSession();
+            mSessions.add(session);
+            return session;
         }
 
         Log.d(Termux.TAG, "The number of sessions is up to the maximum");

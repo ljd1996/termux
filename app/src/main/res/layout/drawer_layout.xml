@@ -38,6 +38,12 @@
             android:layout_height="wrap_content"
             android:onClick="btn3"
             android:text="clear" />
+        <Button
+
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="test"
+            android:text="test" />
 
         <TextView
             android:id="@+id/tv_result"

@@ -1,5 +1,7 @@
 package com.termux.util;
 
+import android.text.TextUtils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,16 +39,21 @@ public class FileUtil {
     }
 
     public static String readFile(String path) {
+        if (TextUtils.isEmpty(path)) {
+            return "";
+        }
         File file = new File(path);
+        if (!file.exists() || file.isDirectory()) {
+            return "";
+        }
         FileInputStream is;
-        StringBuilder stringBuilder = null;
+        StringBuilder stringBuilder = new StringBuilder();
         try {
             if (file.length() != 0) {
                 is = new FileInputStream(file);
                 InputStreamReader streamReader = new InputStreamReader(is);
                 BufferedReader reader = new BufferedReader(streamReader);
                 String line;
-                stringBuilder = new StringBuilder();
                 while ((line = reader.readLine()) != null) {
                     stringBuilder.append(line);
                 }
@@ -55,6 +62,7 @@ public class FileUtil {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            return "";
         }
         return String.valueOf(stringBuilder);
     }

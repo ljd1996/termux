@@ -87,4 +87,19 @@ public class TermuxActivity extends Activity {
         mEtPath.setText("");
         mTvResult.setText("");
     }
+
+    public void test(View view) {
+        TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
+                null, (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code));
+        TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
+                null, (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code));
+        TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
+                null, (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code));
+        new Thread(() -> TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
+                null, (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code))).start();
+        new Thread(() -> TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
+                null, (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code))).start();
+        new Thread(() -> TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
+                null, (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code))).start();
+    }
 }

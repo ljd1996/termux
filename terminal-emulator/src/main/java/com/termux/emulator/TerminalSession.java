@@ -26,9 +26,9 @@ public final class TerminalSession {
     private static final String CMD_NO_OUTPUT = ">/dev/null 2>&1;";
     private static final String SUCCESS_CODE = "0";
 
-    private ArrayBlockingQueue<Command> mCmdQueue = new ArrayBlockingQueue<>(8);
+    private volatile ArrayBlockingQueue<Command> mCmdQueue = new ArrayBlockingQueue<>(8);
     private final ByteQueue mTerminalToProcessIOQueue = new ByteQueue(4096);
-    private Command mCurrentCommand = null;
+    private volatile Command mCurrentCommand = null;
 
     private int mShellPid;
     private int mTerminalFileDescriptor;
@@ -104,12 +104,12 @@ public final class TerminalSession {
         mTerminalFileDescriptor = JNI.createSubprocess(mShellPath, mCwd, mArgs, mEnv, processId, 120, Integer.MAX_VALUE);
         mShellPid = processId[0];
 
-        Log.d(Termux.TAG, "mShellPath: " + mShellPath);
-        Log.d(Termux.TAG, "mCwd: " + mCwd);
-        Log.d(Termux.TAG, "mArgs: " + Arrays.toString(mArgs));
-        Log.d(Termux.TAG, "mEnv: " + Arrays.toString(mEnv));
+//        Log.d(Termux.TAG, "mShellPath: " + mShellPath);
+//        Log.d(Termux.TAG, "mCwd: " + mCwd);
+//        Log.d(Termux.TAG, "mArgs: " + Arrays.toString(mArgs));
+//        Log.d(Termux.TAG, "mEnv: " + Arrays.toString(mEnv));
         Log.d(Termux.TAG, "mShellPid: " + mShellPid);
-        Log.d(Termux.TAG, "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
+//        Log.d(Termux.TAG, "mTerminalFileDescriptor: " + mTerminalFileDescriptor);
 
         final FileDescriptor terminalFileDescriptorWrapped = Termux.wrapFileDescriptor(mTerminalFileDescriptor);
 
@@ -159,9 +159,10 @@ public final class TerminalSession {
                         if (TextUtils.isEmpty(currentCmd.trim())) {
                             continue;
                         }
-                        Log.d(Termux.TAG, "currentCmd = " + currentCmd);
-
                         byte[] cmd = wrapCmd(currentCmd);
+
+                        Log.d(Termux.TAG, mShellPid + " currentCmd = " + currentCmd);
+
                         termOut.write(cmd, 0, cmd.length);
                     }
                 } catch (IOException e) {
