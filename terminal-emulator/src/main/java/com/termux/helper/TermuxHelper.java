@@ -23,7 +23,7 @@ public class TermuxHelper {
     private static final String CMD_INSTALL_YOUTUBE_DL = "python2 -m ensurepip --upgrade --no-default-pip&&pip2 install --upgrade youtube-dl&&pip2 install youtube-dl-server";
     private static final String CMD_UPDATE_YOUTUBE_DL = "pip2 install --upgrade youtube-dl";
     private static final String CMD_START_YOUTUBE_SERVER = "(nohup youtube-dl-server --number-processes 1 --host 0.0.0.0 --port 9191 &)";
-    private static final String CMD_PARSE_YOUTUBE = "curl http://0.0.0.0:9191/api/info?url=";
+    private static final String CMD_PARSE_YOUTUBE = "curl --connect-timeout 5 -m 10 http://0.0.0.0:9191/api/info?url=";
     private static final String CMD_CHECK_YOUTUBE_DL = "pip2 list --outdated>" + Termux.TMP_FILE + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE + "|cat >" + Termux.TMP_FILE1;
     private static final String CMD_YOUTUBE_DL_VERSION = "youtube-dl --version > " + Termux.TMP_FILE;
     private static final String CMD_KILL_YOUTUBE_DL = "ps -ef>" + Termux.TMP_FILE1 + " 2>&1&&grep 'youtube-dl' " + Termux.TMP_FILE1 + "|cat >" + Termux.TMP_FILE1;
@@ -64,7 +64,6 @@ public class TermuxHelper {
         if (context == null) {
             return;
         }
-        // TODO 测试
         synchronized (this) {
             if (!hasInit(context)) {
                 if (sIsInitting) {

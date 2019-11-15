@@ -89,6 +89,11 @@ public class TermuxActivity extends Activity {
     }
 
     public void test(View view) {
+        TermuxHelper.getInstance().parseYoutube(this, "https://www.youtube.com/watch?v=QnjtfMZZnOw",
+                (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code));
+    }
+
+    private void testMult() {
         TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
                 null, (code, responseText) -> Log.d(Termux.TAG, "parse code = " + code));
         TermuxHelper.getInstance().execute(this, "youtube-dl --skip-download --print-json https://www.youtube.com/watch?v=QnjtfMZZnOw",
