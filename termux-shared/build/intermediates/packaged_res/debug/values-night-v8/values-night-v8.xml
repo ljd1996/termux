@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <style name="Theme.BaseActivity.DayNight.DarkActionBar" parent="Theme.MaterialComponents">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/black</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/grey_400</item>
+        <item name="colorSecondaryVariant">@color/grey_500</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" ns1:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="colorPrimaryDark" ns1:targetApi="l">?attr/colorPrimary</item>
+
+        <!-- Text color. -->
+        <item name="android:textColorLink">@color/blue_link_dark</item>
+    </style>
+    <style name="Theme.BaseActivity.DayNight.NoActionBar" parent="Theme.BaseActivity.DayNight.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    <style name="ThemeOverlay.BaseDialog.DayNight" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/black</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/grey_400</item>
+        <item name="colorSecondaryVariant">@color/grey_500</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Surface color. -->
+        <item name="colorSurface">@color/design_dark_default_color_surface</item>
+        <item name="colorOnSurface">@color/design_dark_default_color_on_surface</item>
+
+        <!-- Dialog title panel style. -->
+        <item name="materialAlertDialogTitlePanelStyle">@style/BaseDialog.Title.Panel</item>
+
+        <!-- Dialog message text style. -->
+        <item name="materialAlertDialogBodyTextStyle">@style/BaseDialog.Message.Text.Dark</item>
+    </style>
+</resources>

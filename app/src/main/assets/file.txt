@@ -1,0 +1,3 @@
+ubuntu=https://github.com/termux/proot-distro/releases/download/v4.8.0/ubuntu-mantic-aarch64-pd-v4.8.0.tar.xz
+wine=https://cdn.aiibt.cn/feilong/vm-wine_1.19.6.deb
+exagear=https://api.aiibt.cn/tools/test03024.zip

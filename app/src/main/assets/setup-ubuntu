@@ -1,0 +1,28 @@
+#!/bin/bash
+root_dir=/data/data/com.eltechs.ed/files/home
+
+wine_path=$root_dir/wine.deb
+if [ -f $wine_path ]; then
+    echo "begin to install wine"
+    dpkg -i $wine_path
+    echo "begin to execute wine config"
+    winecfg
+    rm -f $wine_path
+else
+    echo "wine has been installed"
+fi
+
+exagear_path=$root_dir/exagear.zip
+if [ -f $exagear_path ]; then
+    echo "begin to unzip exagear"
+    unzip $exagear_path -d ./
+    echo "begin to cp files to wine"
+    cp -r exagear/XXZ /root/.wine/dosdevices/c:
+    echo "#!/bin/sh
+    export LANG=zh_CN.UTF-8
+    wine /root/exagear/flm60pro.exe" >> /etc/profile.d/start-flm.sh
+    echo "rm exagear"
+    rm -f $exagear_path
+else
+    echo "exagear has been handled"
+fi

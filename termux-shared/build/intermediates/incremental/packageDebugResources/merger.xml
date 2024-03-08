@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3" xmlns:ns1="http://schemas.android.com/tools"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res"/><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/build/generated/res/rs/debug"/><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res"><file name="ic_info" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/drawable/ic_info.xml" qualifiers="" type="drawable"/><file name="ic_share" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/drawable/ic_share.xml" qualifiers="" type="drawable"/><file name="ic_copy" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/drawable/ic_copy.xml" qualifiers="" type="drawable"/><file name="ic_settings" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/drawable/ic_settings.xml" qualifiers="" type="drawable"/><file name="ic_error_notification" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/drawable/ic_error_notification.xml" qualifiers="" type="drawable"/><file name="activity_report" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/layout/activity_report.xml" qualifiers="" type="layout"/><file name="partial_primary_toolbar" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/layout/partial_primary_toolbar.xml" qualifiers="" type="layout"/><file name="activity_text_io" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/layout/activity_text_io.xml" qualifiers="" type="layout"/><file name="markdown_adapter_node_default" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/layout/markdown_adapter_node_default.xml" qualifiers="" type="layout"/><file name="dialog_show_message" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/layout/dialog_show_message.xml" qualifiers="" type="layout"/><file name="markdown_adapter_node_code_block" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/layout/markdown_adapter_node_code_block.xml" qualifiers="" type="layout"/><file path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/values-night/themes.xml" qualifiers="night-v8"><style name="Theme.BaseActivity.DayNight.DarkActionBar" parent="Theme.MaterialComponents">
+        
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/black</item>
+
+        
+        <item name="colorSecondary">@color/grey_400</item>
+        <item name="colorSecondaryVariant">@color/grey_500</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        
+        <item name="android:statusBarColor" ns1:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="colorPrimaryDark" ns1:targetApi="l">?attr/colorPrimary</item>
+
+        
+        <item name="android:textColorLink">@color/blue_link_dark</item>
+    </style><style name="Theme.BaseActivity.DayNight.NoActionBar" parent="Theme.BaseActivity.DayNight.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style><style name="ThemeOverlay.BaseDialog.DayNight" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/black</item>
+
+        
+        <item name="colorSecondary">@color/grey_400</item>
+        <item name="colorSecondaryVariant">@color/grey_500</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        
+        <item name="colorSurface">@color/design_dark_default_color_surface</item>
+        <item name="colorOnSurface">@color/design_dark_default_color_on_surface</item>
+
+        
+        <item name="materialAlertDialogTitlePanelStyle">@style/BaseDialog.Title.Panel</item>
+
+        
+        <item name="materialAlertDialogBodyTextStyle">@style/BaseDialog.Message.Text.Dark</item>
+    </style></file><file path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/values/colors.xml" qualifiers=""><color name="background_markdown_code_inline">#1F000000</color><color name="background_markdown_code_block">#0F000000</color><color name="black">#FF000000</color><color name="white">#FFFFFFFF</color><color name="red_400">#FF0000</color><color name="red_800">#C4001D</color><color name="grey_200">#EEEEEE</color><color name="grey_400">#BDBDBD</color><color name="grey_500">#9E9E9E</color><color name="grey_800">#424242</color><color name="grey_900">#212121</color><color name="red_error">#DC143C</color><color name="red_error_link">#FC143C</color><color name="blue_link_light">#0969DA</color><color name="blue_link_dark">#58A6FF</color></file><file path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/values/dimens.xml" qualifiers=""><dimen name="activity_horizontal_margin">16dp</dimen><dimen name="activity_vertical_margin">16dp</dimen><dimen name="content_padding_half">4dip</dimen><dimen name="content_padding">8dip</dimen><dimen name="content_padding_double">16dip</dimen><dimen name="content_padding_triple">32dip</dimen></file><file path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/values/themes.xml" qualifiers=""><style name="Theme.BaseActivity.Light.DarkActionBar" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        
+        <item name="colorSecondary">@color/grey_900</item>
+        <item name="colorSecondaryVariant">@color/black</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        
+        <item name="android:statusBarColor" ns1:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="colorPrimaryDark" ns1:targetApi="l">?attr/colorPrimary</item>
+
+        
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorLink">@color/blue_link_light</item>
+
+        
+        <item name="alertDialogTheme">@style/ThemeOverlay.BaseDialog.DayNight</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.BaseDialog.DayNight</item>
+    </style><style name="Theme.BaseActivity.Light.NoActionBar" parent="Theme.BaseActivity.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style><style name="Theme.BaseActivity.DayNight.DarkActionBar" parent="Theme.BaseActivity.Light.DarkActionBar"/><style name="Theme.BaseActivity.DayNight.NoActionBar" parent="Theme.BaseActivity.Light.NoActionBar"/><style name="Theme.MediaViewActivity.Light" parent="Theme.BaseActivity.Light.NoActionBar"/><style name="Theme.MarkdownViewActivity.Light" parent="Theme.MediaViewActivity.Light"/><style name="Theme.MediaViewActivity.DayNight" parent="Theme.BaseActivity.DayNight.NoActionBar"/><style name="Theme.MarkdownViewActivity.DayNight" parent="Theme.MediaViewActivity.DayNight"/><style name="ThemeOverlay.BaseDialog.Light" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        
+        <item name="colorSecondary">@color/grey_900</item>
+        <item name="colorSecondaryVariant">@color/black</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        
+        <item name="colorSurface">@color/design_default_color_surface</item>
+        <item name="colorOnSurface">@color/design_default_color_on_surface</item>
+
+        
+        <item name="materialAlertDialogTitlePanelStyle">@style/BaseDialog.Title.Panel</item>
+
+        
+        <item name="materialAlertDialogBodyTextStyle">@style/BaseDialog.Message.Text.Light</item>
+    </style><style name="ThemeOverlay.BaseDialog.DayNight" parent="ThemeOverlay.BaseDialog.Light"/><style name="ThemeOverlay.MessageDialog.DayNight" parent="ThemeOverlay.BaseDialog.DayNight"/></file><file path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/values/styles.xml" qualifiers=""><style name="TextAppearance.Widget.BaseToolbar.Title" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">14sp</item>
+    </style><style name="TextAppearance.Widget.BaseToolbar.Subtitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
+        <item name="android:textSize">12sp</item>
+    </style><style name="BaseDialog.Title.Panel" parent="@style/MaterialAlertDialog.MaterialComponents.Title.Panel">
+        
+        <item name="android:background">@color/red_400</item>
+
+        
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+    </style><style name="BaseDialog.Message.Text.Light" parent="@style/MaterialAlertDialog.MaterialComponents.Body.Text">
+        
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorLink">@color/blue_link_light</item>
+    </style><style name="BaseDialog.Message.Text.Dark" parent="@style/MaterialAlertDialog.MaterialComponents.Body.Text">
+        
+        <item name="android:textColorLink">@color/blue_link_light</item>
+    </style><style name="ViewDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginTop">@dimen/activity_vertical_margin</item>
+        <item name="android:layout_marginBottom">@dimen/activity_vertical_margin</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style></file><file path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/values/strings.xml" qualifiers=""><string name="msg_directory_absolute_path">%1$s Directory Absolute Path: \"%2$s\"</string><string name="error_app_not_installed_or_disabled_warning">The %1$s (%2$s) app is not installed or is disabled.</string><string name="error_get_package_context_failed_title">Failed To Get Package Context</string><string name="error_get_package_context_failed_message">Failed to get package context for the \"%1$s\" package.
+        This may be because the app package is not installed or it has different APK signature from the current app.</string><string name="error_get_package_context_failed_help_url_message">Check %1$s for more details.</string><string name="error_get_component_state_failed">Failed to get %1$s/%2$s component state</string><string name="error_enable_component_failed">Failed to enable %1$s/%2$s component</string><string name="error_disable_component_failed">Failed to enable %1$s/%2$s component</string><string name="message_sudo_please_grant_permissions">Please grant requested permission(s)</string><string name="error_failed_to_request_permissions">Failed to request permissions with request code %1$d: %2$s</string><string name="error_attempted_to_check_for_permissions_not_requested">Attempted to check for permissions that have not been requested in app manifest: %1$s</string><string name="error_attempted_to_ask_for_permissions_not_requested">Attempted to ask for permissions that have not been requested in app manifest: %1$s</string><string name="error_has_not_requested_legacy_external_storage">The \"%1$s\" package is targeting targetSdkVersion %2$d and is running on android sdk %3$d but has not set requestLegacyExternalStorage to true in app manifest</string><string name="msg_requires_dump_and_package_usage_stats_permissions">Requires `DUMP` and `PACKAGE_USAGE_STATS` permission</string><string name="error_display_over_other_apps_permission_not_granted">%1$s requires
+        \"Display over other apps\" permission to start activities and services from background on Android >= 10.
+        Grants it from Android Settings -> Apps -> %1$s -> Advanced -> Draw over other apps.
+        The permission name may be different on different devices, like on Xiaomi, its called
+        \"Display pop-up windows while running in the background\", check https://dontkillmyapp.com
+        for device specific issues.</string><string name="error_allow_external_apps_ungranted">%1$s requires `allow-external-apps`
+        property to be set to `true` in `%2$s` file.</string><string name="title_report_text">Report Text</string><string name="msg_report_truncated">**Report Truncated**\n\nReport is too large to view here.
+        Use `Save To File` option from options menu (3-dots on top right) and view it in an external text editor app.\n\n##\n\n</string><string name="title_share_with">Share With</string><string name="title_open_url_with">Open URL With</string><string name="msg_storage_permission_not_granted">The storage permission not granted.</string><string name="msg_file_saved_successfully">The %1$s file saved successfully at \"%2$s\"</string><string name="error_sending_sigkill_to_process">Sending SIGKILL to process on user request or because android is killing the execution service</string><string name="error_executable_unset">Executable not set \"%1$s\" for shell command</string><string name="error_execution_cancelled">Execution has been cancelled since execution service is being killed</string><string name="error_failed_to_execute_termux_session_command">Failed to execute \"%1$s\" termux session command</string><string name="error_failed_to_execute_app_shell_command">Failed to execute \"%1$s\" app shell command</string><string name="error_exception_received_while_executing_termux_session_command">Exception received while to executing \"%1$s\" termux session command.\nException: %2$s</string><string name="error_exception_received_while_executing_app_shell_command">Exception received while to executing \"%1$s\" app shell command.\nException: %2$s</string><string name="msg_report_issue">
+        If you want to report this issue, then copy its text from the options menu (3-dots on top right) and post
+        an issue on one of the following links.
+        \n\nIf you are posting a Termux app crash report, then please provide details on what you were doing that
+        caused the crash and how to reproduce it, if possible.
+        \n\nIf you are posting an issue on GitHub, then post it in the repository at which the report belongs at.
+        Issues opened or emails sent with **(partial) screenshots** instead of copied text or a file of this report
+        **will likely be automatically closed/deleted**. You may optionally remove any device specific info that
+        you consider private or don\'t want to share or that is not relevant to the issue.
+        \n\nWe do not provide support for any hacking related tools/scripts. Any questions asked about them over email,
+        on GitHub or other official termux community forums **will likely be automatically closed/deleted** and may
+        even result in **temporary or permanent** ban. Check %1$s/wiki/Hacking for details.</string><string name="msg_termux_app_required_by_app">The Termux is required by the %1$s app to run termux commands.</string><string name="error_termux_app_package_context_not_accessible">The Termux app (package context) is not accessible.</string><string name="error_termux_prefix_dir_path_not_accessible">The Termux app $PREFIX directory is not accessible by the %1$s app.
+        This may be because you have not installed or setup Termux app or
+        Termux app and %1$s app both have different APK signatures because you have managed to install both apps from different sources.
+        It may also be because Termux $PREFIX directory \"/data/data/com.termux/files/usr\" does not exist or does not have read,
+        write and execute permissions.</string><string name="action_yes">Yes</string><string name="action_no">No</string><string name="action_copy">Copy</string><string name="action_share">Share</string><string name="action_cancel">Cancel</string><string name="action_save_to_file">Save To File</string><string name="msg_storage_permission_granted_on_request">The storage permission granted by user on request</string><string name="msg_storage_permission_not_granted_on_request">The storage permission not granted by user on request</string><string name="action_enable_launcher_icon">Enable Launcher Icon</string><string name="action_disable_launcher_icon">Disable Launcher Icon</string><string name="msg_enabling_launcher_icon">Enabling %1$s app launcher icon</string><string name="msg_disabling_launcher_icon">Disabling %1$s app launcher icon</string><string name="setting_launcher_icon_title">Launcher Icon Enabled</string><string name="setting_launcher_icon_enabled_off">Launcher Icon will be disabled.</string><string name="setting_launcher_icon_enabled_on">Launcher Icon will be enabled. (Default)</string><string name="log_level_title">Log Level</string><string name="log_level_off">Off</string><string name="log_level_normal">Normal</string><string name="log_level_debug">Debug</string><string name="log_level_verbose">Verbose</string><string name="log_level_unknown">*Unknown*</string><string name="log_level_value">Logcat log level set to \"%1$s\"</string></file><file path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/values/attrs.xml" qualifiers=""><attr format="reference" name="extraKeysButtonTextColor"/><attr format="reference" name="extraKeysButtonActiveTextColor"/><attr format="reference" name="extraKeysButtonBackgroundColor"/><attr format="reference" name="extraKeysButtonActiveBackgroundColor"/></file><file name="menu_report" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/menu/menu_report.xml" qualifiers="" type="menu"/><file name="menu_text_io" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/menu/menu_text_io.xml" qualifiers="" type="menu"/><file name="apt_info_script" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/raw/apt_info_script.sh" qualifiers="" type="raw"/><file name="bell" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/raw/bell.ogg" qualifiers="" type="raw"/><file name="keep" path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/main/res/raw/keep.xml" qualifiers="" type="raw"/></source><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/build/generated/res/rs/debug"/><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/bytedance/Workspace/Termux/termux-app/termux-shared/src/debug/res"/></dataSet><mergedItems/></merger>

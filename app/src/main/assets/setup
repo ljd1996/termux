@@ -1,0 +1,18 @@
+#!/bin/bash
+dir=/data/data/com.eltechs.ed/files
+root_dir=$dir/home
+
+ubuntu_path=$root_dir/ubuntu-mantic-aarch64-pd-v4.8.0.tar.xz
+if [ -f $ubuntu_path ]; then
+    echo "begin to install ubuntu"
+    proot-distro install ubuntu
+    rm -f $ubuntu_path
+else
+    echo "ubuntu has been installed"
+fi
+
+proot-distro login ubuntu -- bash $dir/usr/bin/setup-ubuntu
+
+echo "initialize finished!!!"
+
+proot-distro login ubuntu
